@@ -1,291 +1,697 @@
+:root {
+    --bg-primary: #0a1118;
+    --bg-surface: rgba(17, 28, 38, 0.88);
+    --bg-surface-elevated: rgba(22, 36, 50, 0.88);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --border-hover: rgba(255, 255, 255, 0.25);
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-yellow: #facc15;
+    --accent-green: #34d399;
+    --accent-red: #f87171;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 8px;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-sans);
 }
 
 body {
     min-height: 100vh;
-    background: linear-gradient(135deg, #183446 0%, #0d2133 50%, #081726 100%);
+    color: var(--text-primary);
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 24px 16px;
+    align-items: flex-start;
+    padding: 32px 20px;
+    transition: background 1.2s ease;
     overflow-x: hidden;
     position: relative;
-    color: #ffffff;
 }
 
-/* Quả cầu phát sáng chuyển động */
-.glow-orb {
+/* ================= 4 THEME BẦU TRỜI ================= */
+body.theme-day {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 50%, #0369a1 100%);
+}
+body.theme-day .dash-panel,
+body.theme-day .app-header {
+    background: rgba(10, 24, 38, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+body.theme-sunset {
+    background: linear-gradient(135deg, #4c1d95 0%, #db2777 50%, #f97316 100%);
+}
+body.theme-sunset .dash-panel,
+body.theme-sunset .app-header {
+    background: rgba(22, 16, 36, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+}
+
+body.theme-night {
+    background: radial-gradient(circle at 10% 10%, #0f1c29 0%, #080f16 60%, #05080c 100%);
+}
+body.theme-night .dash-panel,
+body.theme-night .app-header {
+    background: var(--bg-surface);
+}
+
+body.theme-rain {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
+}
+body.theme-rain .dash-panel,
+body.theme-rain .app-header {
+    background: rgba(15, 23, 34, 0.85);
+}
+
+#weatherCanvas {
     position: fixed;
-    border-radius: 50%;
-    filter: blur(90px);
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.5;
-    animation: orbMove 14s infinite alternate ease-in-out;
-}
-
-.orb-1 {
-    width: 380px;
-    height: 380px;
-    background: #00d2ff;
-    top: 5%;
-    left: 8%;
-}
-
-.orb-2 {
-    width: 340px;
-    height: 340px;
-    background: #3a7bd5;
-    bottom: 5%;
-    right: 8%;
-    animation-delay: -5s;
-}
-
-@keyframes orbMove {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(40px, -30px) scale(1.08); }
-    100% { transform: translate(-30px, 40px) scale(0.95); }
-}
-
-/* Nút âm thanh */
-.audio-control-btn {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(12px);
-    color: #ffffff;
-    font-size: 1.1rem;
-    cursor: pointer;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.audio-control-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.08);
-}
-
-/* Khung Weather Glassmorphism */
-.weather-card {
-    position: relative;
-    z-index: 10;
+    inset: 0;
     width: 100%;
-    max-width: 450px;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 30px;
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.45);
-    padding: 26px 20px;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
 }
 
-/* Ô tìm kiếm */
-.search-bar {
+.app-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1120px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Header */
+.app-header {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 20px;
-    padding: 8px 14px;
-    margin-bottom: 18px;
-    transition: all 0.3s ease;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
 }
 
-.search-bar:focus-within {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.45);
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.location-icon {
+.brand-logo {
+    color: var(--accent-blue);
+    font-size: 1.25rem;
+}
+
+.brand-name {
+    font-weight: 800;
     font-size: 1.15rem;
-    color: #ffd700;
+    letter-spacing: -0.3px;
+}
+
+.search-container {
+    flex: 1;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 6px 14px;
+    transition: var(--transition);
+}
+
+.search-container:focus-within {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.search-icon {
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
     margin-right: 10px;
 }
 
-.search-bar input {
+.search-container input {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
 }
 
-.search-bar input::placeholder {
-    color: rgba(255, 255, 255, 0.65);
+.search-container input::placeholder {
+    color: var(--text-tertiary);
 }
 
-.search-btn {
+.search-container button {
     background: transparent;
     border: none;
-    color: #ffffff;
+    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 1rem;
     padding: 4px 6px;
-    transition: transform 0.2s;
+    border-radius: 50%;
+    transition: var(--transition);
 }
 
-.search-btn:hover {
-    transform: scale(1.15);
+.search-container button:hover {
+    color: var(--accent-blue);
 }
 
-/* Khối hiển thị chính */
-.weather-display {
-    text-align: center;
-}
-
-.weather-visual {
-    margin: 4px auto 6px;
-    height: 110px;
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: var(--transition);
 }
 
-.weather-visual img {
-    width: 115px;
-    height: 115px;
-    object-fit: contain;
-    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.25));
-    animation: floatIcon 4s ease-in-out infinite alternate;
+.action-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
-@keyframes floatIcon {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-7px); }
-}
-
-.temperature-wrap {
+/* Quick Cities Bar */
+.quick-cities-bar {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    line-height: 1;
-    margin-bottom: 6px;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0;
 }
 
-.temp-val {
-    font-size: 4.2rem;
+.quick-cities-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.city-pill {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.city-pill:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface-elevated);
+    border-color: var(--border-hover);
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 18px;
+}
+
+.dash-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Panel Main (Trái) */
+.location-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.location-heading h2 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.live-clock-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    padding: 4px 10px;
+    border-radius: 999px;
     font-weight: 700;
-    letter-spacing: -2px;
 }
 
-.temp-unit {
-    font-size: 1.6rem;
-    font-weight: 600;
-    margin-top: 6px;
-    margin-left: 2px;
+.tz-tag {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
 }
 
-.weather-desc {
-    font-size: 1.15rem;
+.date-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: -12px;
+}
+
+/* HERO ROW: NHIỆT ĐỘ & ĐỒNG HỒ KIM BÊN CẠNH */
+.hero-weather-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px;
+    gap: 16px;
+}
+
+.hero-weather-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hero-weather-left img {
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3));
+}
+
+.temp-number {
+    font-size: 4.4rem;
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 1;
+}
+
+.condition-text {
+    font-size: 1.1rem;
     font-weight: 600;
+    color: var(--text-secondary);
     text-transform: capitalize;
-    color: #ffffff;
-    margin-bottom: 6px;
+    margin-top: 4px;
 }
 
-.rain-notice {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #ffd700;
-    min-height: 20px;
-    margin-bottom: 18px;
+/* ĐỒNG HỒ KIM (ANALOG CLOCK) MINI */
+.hero-analog-clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
 }
 
-/* 4 ô thông số hôm nay */
+.analog-clock-dial {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(10, 20, 30, 0.85) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+}
+
+.ac-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    box-shadow: 0 0 6px var(--accent-blue);
+}
+
+.ac-mark {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.ac-mark.m-12 { top: 3px; left: 50%; width: 2px; height: 5px; transform: translateX(-50%); }
+.ac-mark.m-6  { bottom: 3px; left: 50%; width: 2px; height: 5px; transform: translateX(-50%); }
+.ac-mark.m-3  { right: 3px; top: 50%; width: 5px; height: 2px; transform: translateY(-50%); }
+.ac-mark.m-9  { left: 3px; top: 50%; width: 5px; height: 2px; transform: translateY(-50%); }
+
+.ac-hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom center;
+    border-radius: 4px;
+}
+
+.ac-hour {
+    width: 3px;
+    height: 20px;
+    background: #ffffff;
+    margin-left: -1.5px;
+    z-index: 2;
+}
+
+.ac-minute {
+    width: 2px;
+    height: 27px;
+    background: var(--accent-blue);
+    margin-left: -1px;
+    z-index: 3;
+}
+
+.ac-second {
+    width: 1.2px;
+    height: 30px;
+    background: var(--accent-yellow);
+    margin-left: -0.6px;
+    z-index: 4;
+}
+
+.ac-caption {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Smart Notice */
+.smart-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.smart-notice i {
+    color: var(--accent-blue);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.smart-notice.danger {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.25);
+    color: var(--accent-red);
+}
+.smart-notice.danger i { color: var(--accent-red); }
+
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 10px;
 }
 
 .metric-card {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 16px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     padding: 12px 14px;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: var(--transition);
 }
 
 .metric-card:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-2px);
+    border-color: var(--border-hover);
+    background: #1a2a3a;
 }
 
-.metric-icon-wrap {
+.metric-icon {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.04);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    color: #00d2ff;
+    color: var(--accent-blue);
+    font-size: 1rem;
 }
 
-.metric-meta {
+.metric-info {
     display: flex;
     flex-direction: column;
-    text-align: left;
 }
 
-.metric-value {
-    font-size: 0.95rem;
+.m-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.m-val {
+    font-size: 1rem;
     font-weight: 700;
 }
 
-.metric-label {
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.75);
-    margin-top: 2px;
-}
-
-/* Khung dự báo 5 ngày */
-.forecast-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    padding-top: 14px;
-    text-align: left;
-}
-
-.forecast-header-row {
+/* Hourly Strip */
+.hourly-strip-card {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.strip-header {
+    display: flex;
     align-items: center;
-    margin-bottom: 10px;
-    padding: 0 4px;
-}
-
-.forecast-title {
+    justify-content: space-between;
     font-size: 0.8rem;
-    font-weight: 700;
-    color: #ffd700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
 }
 
-.forecast-hint {
+.strip-title {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.rain-summary {
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
+.hourly-track {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hover) transparent;
+}
+
+.hour-node {
+    flex: 0 0 62px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+}
+
+.hour-node.rain-risk {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.hour-node .h-time {
+    font-family: var(--font-mono);
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-secondary);
+}
+
+.hour-node img {
+    width: 28px;
+    height: 28px;
+}
+
+.hour-node .h-temp {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.hour-node .h-pop {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+/* Panel Secondary (Phải) */
+.widgets-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 150px;
+    gap: 12px;
+}
+
+.sub-widget {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.widget-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aqi-widget {
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.aqi-widget:hover {
+    border-color: var(--border-hover);
+}
+
+.aqi-main-status {
+    margin: 8px 0;
+}
+
+.aqi-badge-pill {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.aqi-badge-pill.fair { color: var(--accent-yellow); background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.3); }
+.aqi-badge-pill.moderate { color: #fb923c; background: rgba(251, 146, 60, 0.15); border-color: rgba(251, 146, 60, 0.3); }
+.aqi-badge-pill.poor { color: var(--accent-red); background: rgba(248, 113, 113, 0.15); border-color: rgba(248, 113, 113, 0.3); }
+
+.aqi-desc {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+.sun-times-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sun-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sun-item i {
+    font-size: 1rem;
+}
+
+.sun-rise-icon { color: var(--accent-yellow); }
+.sun-set-icon { color: #a78bfa; }
+
+.sun-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    display: block;
+}
+
+.sun-item strong {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.map-widget {
+    padding: 6px;
+    overflow: hidden;
+}
+
+.map-container {
+    width: 100%;
+    height: 85px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+}
+
+.map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    filter: invert(90%) hue-rotate(180deg) contrast(1.1) brightness(0.85);
+}
+
+.coords-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    text-align: center;
+    padding-top: 4px;
+}
+
+/* Forecast Panel */
+.forecast-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.forecast-panel-head h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.forecast-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
 .forecast-list {
@@ -294,200 +700,229 @@ body {
     gap: 8px;
 }
 
-/* Từng dòng ngày trong danh sách 5 ngày */
-.forecast-row {
+.forecast-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
-    padding: 9px 14px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: var(--transition);
 }
 
-.forecast-row:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateX(4px);
-    border-color: rgba(0, 210, 255, 0.4);
+.forecast-item:hover {
+    border-color: var(--border-hover);
+    background: #1a2a3a;
+    transform: translateX(3px);
 }
 
-.forecast-date-col {
+.f-day {
+    width: 120px;
     display: flex;
     flex-direction: column;
-    width: 120px;
 }
 
-.forecast-row-day {
-    font-size: 0.86rem;
-    font-weight: 700;
-    color: #ffffff;
+.f-day strong {
+    font-size: 0.88rem;
 }
 
-.forecast-row-subdate {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.65);
-    margin-top: 1px;
+.f-day span {
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
 }
 
-.forecast-row-icon {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
+.forecast-item img {
+    width: 36px;
+    height: 36px;
 }
 
-.forecast-row-desc {
+.f-desc {
     flex: 1;
     text-align: center;
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
     text-transform: capitalize;
-    padding: 0 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 0 10px;
 }
 
-.forecast-row-temp {
-    font-size: 0.88rem;
-    font-weight: 700;
-    width: 48px;
+.f-temp {
+    width: 50px;
     text-align: right;
-    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
 }
 
-/* Modal Popup Cơ bản */
-.metric-modal {
+/* Footer mới: Chống chìm màu, sắc nét trên mọi nền trời */
+.app-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 8px 6px;
+}
+
+.app-footer span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(10, 24, 38, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 6px 16px;
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.2px;
+}
+
+/* Thích ứng theo từng theme */
+body.theme-day .app-footer span {
+    background: rgba(8, 22, 36, 0.75);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+body.theme-sunset .app-footer span {
+    background: rgba(22, 16, 36, 0.8);
+    color: #fde68a;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.theme-night .app-footer span {
+    background: rgba(17, 28, 38, 0.8);
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modals */
+.app-modal {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
 }
 
-.metric-modal.active {
+.app-modal.active {
     opacity: 1;
     pointer-events: auto;
 }
 
-.modal-backdrop {
+.modal-scrim {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
 }
 
-.modal-content {
+.modal-card {
     position: relative;
-    z-index: 101;
-    width: 90%;
-    max-width: 380px;
-    background: rgba(20, 36, 52, 0.94);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 24px;
+    z-index: 51;
+    width: 92%;
+    max-width: 440px;
+    background: #111c26;
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-lg);
     padding: 22px;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
-.modal-close-btn {
+.modal-close {
     position: absolute;
     top: 14px;
     right: 14px;
     background: transparent;
     border: none;
-    color: #ffffff;
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.modal-close-btn:hover {
-    transform: scale(1.15);
-}
-
-.modal-title {
+    color: var(--text-secondary);
     font-size: 1.1rem;
-    font-weight: 700;
-    color: #00d2ff;
-    margin-bottom: 10px;
+    cursor: pointer;
+    padding: 4px;
 }
 
-.modal-body {
-    font-size: 0.88rem;
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.9);
-}
+.modal-close:hover { color: var(--text-primary); }
 
-/* Modal Xem Chi Tiết Từng Ngày */
-.day-modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-}
-
-.day-modal-title {
+.modal-header h3 {
     font-size: 1.15rem;
-    font-weight: 700;
-    color: #ffd700;
-    margin-bottom: 8px;
+    font-weight: 800;
 }
 
-.day-modal-weather {
+.modal-summary {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-top: 6px;
 }
 
-.day-modal-weather img {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
-}
+.modal-summary img { width: 44px; height: 44px; }
+.modal-temp { font-size: 1.6rem; font-weight: 800; }
+.modal-desc { font-size: 0.85rem; color: var(--text-secondary); display: block; }
 
-.day-modal-temp {
-    font-size: 1.8rem;
-    font-weight: 700;
-}
-
-.day-modal-desc {
-    font-size: 0.88rem;
-    text-transform: capitalize;
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.day-modal-grid {
+.modal-metrics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
 }
 
-.day-detail-item {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.modal-metric-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px;
 }
 
-.day-detail-item i {
-    font-size: 1.1rem;
-    color: #00d2ff;
-}
-
-.day-detail-item .detail-label {
+.modal-metric-item strong {
     display: block;
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    margin-top: 2px;
 }
 
-.day-detail-item strong {
-    font-size: 0.92rem;
-    color: #ffffff;
+.modal-hourly-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.box-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.modal-hourly-track {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .widgets-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .map-widget {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 600px) {
+    body { padding: 14px 10px; }
+    .app-header { flex-direction: column; align-items: stretch; }
+    .search-container { max-width: 100%; }
+    .hero-weather-row { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .widgets-row { grid-template-columns: 1fr; }
+    .map-widget { grid-column: span 1; }
 }
