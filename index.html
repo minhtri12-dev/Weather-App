@@ -2,90 +2,174 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dự Báo Thời Tiết</title>
-    <!-- Font Roboto -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- File CSS -->
+    <title>Dự Báo Thời Tiết - Weather App</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Quả cầu phát sáng nền động -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
 
-    <!-- Nút bật / tắt âm thanh thư giãn theo thời tiết -->
-    <button class="sound-toggle-btn" id="soundToggle" title="Bật/Tắt âm thanh thư giãn">
-        <i class="fa-solid fa-volume-xmark"></i>
+    <!-- Nút điều khiển âm thanh môi trường -->
+    <button id="audioToggleBtn" class="audio-control-btn" title="Bật/Tắt âm thanh môi trường">
+        <i class="fa-solid fa-volume-xmark" id="audioIcon"></i>
     </button>
 
-    <div class="container">
-        <!-- Khung tìm kiếm -->
-        <div class="search-box">
-            <i class="fa-solid fa-location-dot"></i>
-            <input type="text" placeholder="Nhập vị trí...">
-            <button class="fa-solid fa-magnifying-glass"></button>
+    <!-- Thẻ Weather Glassmorphism -->
+    <main class="weather-card">
+        <!-- Thanh tìm kiếm địa điểm -->
+        <div class="search-bar">
+            <i class="fa-solid fa-location-dot location-icon"></i>
+            <input type="text" id="cityInput" placeholder="Nhập tỉnh, thành phố, quận..." spellcheck="false" autocomplete="off">
+            <button id="searchBtn" class="search-btn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
         </div>
 
-        <!-- Báo lỗi không tìm thấy -->
-        <div class="not-found">
-            <img src="images/404.png" alt="Không tìm thấy">
-            <p>Không tìm thấy địa điểm :/</p>
-        </div>
+        <!-- Trạng thái thời tiết hiện tại -->
+        <div class="weather-display" id="weatherDisplay">
+            <div class="weather-visual">
+                <img id="weatherIcon" src="https://openweathermap.org/img/wn/10d@4x.png" alt="Biểu tượng thời tiết">
+            </div>
 
-        <!-- Khối hiển thị thời tiết chính -->
-        <div class="weather-box">
-            <img src="" alt="Thời tiết">
-            <p class="temperature"></p>
-            <p class="description"></p>
-        </div>
+            <div class="temperature-wrap">
+                <span id="tempValue" class="temp-val">--</span>
+                <span class="temp-unit">°C</span>
+            </div>
 
-        <!-- Lưới 4 thông số chi tiết (click để xem popup) -->
-        <div class="weather-details">
-            <div class="humidity" title="Click để xem chi tiết độ ẩm">
-                <i class="fa-solid fa-water"></i>
-                <div class="text">
-                    <span></span>
-                    <p>Độ ẩm</p>
+            <div id="weatherDesc" class="weather-desc">Đang nạp dữ liệu...</div>
+            <div id="rainNotice" class="rain-notice">Đang kiểm tra khả năng mưa...</div>
+
+            <!-- Lưới 4 chỉ số chi tiết ngày hiện tại -->
+            <div class="metrics-grid">
+                <div class="metric-card" onclick="openMetricModal('humidity')">
+                    <div class="metric-icon-wrap">
+                        <i class="fa-solid fa-water"></i>
+                    </div>
+                    <div class="metric-meta">
+                        <span id="humidityVal" class="metric-value">--%</span>
+                        <span class="metric-label">Độ ẩm</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" onclick="openMetricModal('wind')">
+                    <div class="metric-icon-wrap">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <div class="metric-meta">
+                        <span id="windVal" class="metric-value">-- km/h</span>
+                        <span class="metric-label">Tốc độ gió</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" onclick="openMetricModal('rain_volume')">
+                    <div class="metric-icon-wrap">
+                        <i class="fa-solid fa-cloud-rain"></i>
+                    </div>
+                    <div class="metric-meta">
+                        <span id="rainVolVal" class="metric-value">0 mm</span>
+                        <span class="metric-label">Lượng mưa (1h)</span>
+                    </div>
+                </div>
+
+                <div class="metric-card" onclick="openMetricModal('rain_pop')">
+                    <div class="metric-icon-wrap">
+                        <i class="fa-solid fa-cloud-showers-heavy"></i>
+                    </div>
+                    <div class="metric-meta">
+                        <span id="rainPopVal" class="metric-value">--%</span>
+                        <span class="metric-label">Khả năng mưa</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="wind" title="Click để xem chi tiết sức gió">
-                <i class="fa-solid fa-wind"></i>
-                <div class="text">
-                    <span></span>
-                    <p>Tốc độ gió</p>
+            <!-- Khung dự báo 5 ngày tiếp theo -->
+            <section class="forecast-section">
+                <div class="forecast-header-row">
+                    <h4 class="forecast-title">DỰ BÁO 5 NGÀY TỚI</h4>
+                    <span class="forecast-hint">(Bấm vào để xem chi tiết)</span>
                 </div>
-            </div>
-
-            <div class="rain" title="Click để xem chi tiết lượng mưa">
-                <i class="fa-solid fa-cloud-showers-heavy"></i>
-                <div class="text">
-                    <span>0 mm</span>
-                    <p>Lượng mưa (1h)</p>
+                <div class="forecast-list" id="forecastList">
+                    <!-- JavaScript sẽ tự render danh sách 5 ngày vào đây -->
                 </div>
-            </div>
-
-            <div class="rain-chance" title="Click để xem chi tiết xác suất mưa">
-                <i class="fa-solid fa-cloud-rain"></i>
-                <div class="text">
-                    <span>0%</span>
-                    <p>Khả năng mưa</p>
-                </div>
-            </div>
+            </section>
         </div>
+    </main>
 
-        <!-- Bảng Popup chi tiết kính mờ khi bấm vào các ô thông số -->
-        <div class="detail-modal" id="detailModal">
-            <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h3 id="modalTitle">Chi tiết</h3>
-                <div id="modalDesc">Nội dung chi tiết...</div>
+    <!-- Modal 1: Xem giải thích chỉ số thời tiết chung -->
+    <div id="metricModal" class="metric-modal">
+        <div class="modal-backdrop" onclick="closeMetricModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeMetricModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="modalTitle" class="modal-title">Chi Tiết Thông Số</h3>
+            <p id="modalBody" class="modal-body"></p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Xem chi tiết 4 thông số của từng ngày dự báo khi click -->
+    <div id="dayDetailModal" class="metric-modal">
+        <div class="modal-backdrop" onclick="closeDayDetailModal()"></div>
+        <div class="modal-content day-modal-content">
+            <button class="modal-close-btn" onclick="closeDayDetailModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="day-modal-header">
+                <h3 id="dayModalTitle" class="day-modal-title">Thứ 7, 19/09/2026</h3>
+                <div class="day-modal-weather">
+                    <img id="dayModalIcon" src="" alt="icon">
+                    <div>
+                        <span id="dayModalTemp" class="day-modal-temp">27°C</span>
+                        <div id="dayModalDesc" class="day-modal-desc">Mưa vừa</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="day-modal-grid">
+                <div class="day-detail-item">
+                    <i class="fa-solid fa-water"></i>
+                    <div>
+                        <span class="detail-label">Độ ẩm</span>
+                        <strong id="dayModalHumidity">--%</strong>
+                    </div>
+                </div>
+                <div class="day-detail-item">
+                    <i class="fa-solid fa-wind"></i>
+                    <div>
+                        <span class="detail-label">Tốc độ gió</span>
+                        <strong id="dayModalWind">-- km/h</strong>
+                    </div>
+                </div>
+                <div class="day-detail-item">
+                    <i class="fa-solid fa-cloud-rain"></i>
+                    <div>
+                        <span class="detail-label">Lượng mưa</span>
+                        <strong id="dayModalRainVol">0 mm</strong>
+                    </div>
+                </div>
+                <div class="day-detail-item">
+                    <i class="fa-solid fa-cloud-showers-heavy"></i>
+                    <div>
+                        <span class="detail-label">Khả năng mưa</span>
+                        <strong id="dayModalPop">--%</strong>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- File JavaScript -->
+    <!-- Audio Element -->
+    <audio id="ambientAudio" loop></audio>
+
     <script src="index.js"></script>
 </body>
 </html>

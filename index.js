@@ -1,381 +1,352 @@
-const container = document.querySelector('.container');
-const search = document.querySelector('.search-box button');
-const input = document.querySelector('.search-box input');
-const weatherBox = document.querySelector('.weather-box');
-const weatherDetails = document.querySelector('.weather-details');
-const error404 = document.querySelector('.not-found');
+// ================= CẤU HÌNH API =================
+const API_KEY = "5d0440c6a96719587d42efc9382e6105";
+let currentCityTimezoneOffset = 0;
 
-const modal = document.getElementById('detailModal');
-const modalTitle = document.getElementById('modalTitle');
-const modalDesc = document.getElementById('modalDesc');
-const closeModal = document.querySelector('.close-modal');
-const soundBtn = document.getElementById('soundToggle');
-
-const APIKey = '5d0440c6a96719587d42efc9382e6105';
-let currentWeatherDetails = null;
-let currentForecastDetails = null;
-
-// ==================== QUẢN LÝ ÂM THANH GOOGLE CDN SIÊU ỔN ĐỊNH ====================
-let isAudioPlaying = false;
-const audioPlayer = new Audio();
-audioPlayer.loop = true;
-
-// Kho âm thanh chính thức từ Google Actions Sounds (không bao giờ bị lỗi 403)
-const soundTracks = {
-    rain: 'https://actions.google.com/sounds/v1/weather/light_rain.ogg',           // Tiếng mưa rơi dịu nhẹ
-    nature: 'https://actions.google.com/sounds/v1/ambiences/spring_day_forest.ogg' // Tiếng chim hót & gió xuân trong lành
+// Google CDN Audio (Hoạt động ổn định, không bị chặn CORS)
+const AUDIO_SOURCES = {
+    rain: "https://actions.google.com/sounds/v1/weather/light_rain.ogg",
+    ambient: "https://actions.google.com/sounds/v1/ambiences/spring_day_forest.ogg"
 };
 
-// Đổi bài hát theo thời tiết hiện tại
-function updateAudioSource(weatherMain) {
-    const isRaining = ['Rain', 'Drizzle', 'Thunderstorm'].includes(weatherMain);
-    const targetUrl = isRaining ? soundTracks.rain : soundTracks.nature;
+// Lưu trữ dữ liệu 5 ngày để khi click vào ngày nào sẽ đọc chi tiết ngày đó
+let forecastDaysStorage = {};
 
-    if (audioPlayer.src !== targetUrl) {
-        audioPlayer.src = targetUrl;
-        if (isAudioPlaying) {
-            audioPlayer.play().catch(() => {});
-        }
-    }
-}
+// ================= DOM ELEMENTS =================
+const cityInput = document.getElementById("cityInput");
+const searchBtn = document.getElementById("searchBtn");
+const weatherIcon = document.getElementById("weatherIcon");
+const tempValue = document.getElementById("tempValue");
+const weatherDesc = document.getElementById("weatherDesc");
+const rainNotice = document.getElementById("rainNotice");
+const humidityVal = document.getElementById("humidityVal");
+const windVal = document.getElementById("windVal");
+const rainVolVal = document.getElementById("rainVolVal");
+const rainPopVal = document.getElementById("rainPopVal");
+const forecastList = document.getElementById("forecastList");
 
-// Bắt sự kiện click bật/tắt nút loa
-if (soundBtn) {
-    soundBtn.addEventListener('click', () => {
-        // Đảm bảo đã có nguồn nhạc
-        if (!audioPlayer.src) {
-            const currentMain = currentWeatherDetails ? currentWeatherDetails.weather[0].main : 'Clear';
-            updateAudioSource(currentMain);
-        }
+const audioToggleBtn = document.getElementById("audioToggleBtn");
+const audioIcon = document.getElementById("audioIcon");
+const ambientAudio = document.getElementById("ambientAudio");
 
-        if (!isAudioPlaying) {
-            audioPlayer.play().then(() => {
-                isAudioPlaying = true;
-                soundBtn.classList.add('playing');
-                soundBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-            }).catch(e => {
-                console.log('Lỗi phát âm thanh:', e);
-            });
-        } else {
-            audioPlayer.pause();
-            isAudioPlaying = false;
-            soundBtn.classList.remove('playing');
-            soundBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-        }
-    });
-}
+let isAudioPlaying = false;
 
-// Tự động chọn chữ trong ô tìm kiếm khi click vào
-input.addEventListener('focus', () => input.select());
-
-// Tự động thu nhỏ cỡ chữ khi địa danh quá dài
-function adjustInputFontSize(text) {
-    if (!text) return;
-    if (text.length > 20) {
-        input.style.fontSize = '14px';
-    } else if (text.length > 15) {
-        input.style.fontSize = '16px';
-    } else {
-        input.style.fontSize = '18px';
-    }
-}
-
-// Bật/tắt biểu tượng xoay tròn khi đang tìm kiếm
-function setLoading(isLoading) {
-    if (isLoading) {
-        search.classList.remove('fa-magnifying-glass');
-        search.classList.add('fa-spinner', 'fa-spin');
-    } else {
-        search.classList.remove('fa-spinner', 'fa-spin');
-        search.classList.add('fa-magnifying-glass');
-    }
-}
-
-// Cập nhật gradient màu nền theo thời tiết
-function updateBackground(weatherMain) {
-    document.body.className = '';
-    switch (weatherMain) {
-        case 'Clear':
-            document.body.classList.add('clear-bg');
-            break;
-        case 'Clouds':
-            document.body.classList.add('clouds-bg');
-            break;
-        case 'Rain':
-        case 'Drizzle':
-        case 'Thunderstorm':
-            document.body.classList.add('rain-bg');
-            break;
-        case 'Snow':
-            document.body.classList.add('snow-bg');
-            break;
-        case 'Haze':
-        case 'Mist':
-        case 'Fog':
-            document.body.classList.add('mist-bg');
-            break;
-        default:
-            document.body.style.background = '#0b131e';
-    }
-}
-
-// Gọi API và hiển thị toàn bộ thời tiết
-function getWeatherData(endpointWeather, endpointForecast) {
-    setLoading(true);
-
-    fetch(endpointWeather)
-        .then(response => response.json())
-        .then(json => {
-            if (json.cod === '404' || json.cod === '400') {
-                container.style.height = '400px';
-                weatherBox.style.display = 'none';
-                weatherDetails.style.display = 'none';
-                error404.style.display = 'block';
-                error404.classList.add('fadeIn');
-                setLoading(false);
-                return;
-            }
-
-            error404.style.display = 'none';
-            error404.classList.remove('fadeIn');
-
-            currentWeatherDetails = json;
-
-            if (json.name) {
-                input.value = json.name;
-                adjustInputFontSize(json.name);
-            }
-
-            const weatherMain = json.weather[0].main;
-            updateBackground(weatherMain);
-            updateAudioSource(weatherMain);
-
-            const image = document.querySelector('.weather-box img');
-            const temperature = document.querySelector('.weather-box .temperature');
-            const description = document.querySelector('.weather-box .description');
-            const humidity = document.querySelector('.weather-details .humidity span');
-            const wind = document.querySelector('.weather-details .wind span');
-            const rain = document.querySelector('.weather-details .rain span');
-            const rainChance = document.querySelector('.weather-details .rain-chance span');
-
-            switch (weatherMain) {
-                case 'Clear': image.src = 'images/clear.png'; break;
-                case 'Rain': image.src = 'images/rain.png'; break;
-                case 'Snow': image.src = 'images/snow.png'; break;
-                case 'Clouds': image.src = 'images/cloud.png'; break;
-                case 'Haze':
-                case 'Mist': image.src = 'images/mist.png'; break;
-                default: image.src = '';
-            }
-
-            temperature.innerHTML = `${parseInt(json.main.temp)}<span>°C</span>`;
-            humidity.innerHTML = `${json.main.humidity}%`;
-            wind.innerHTML = `${parseInt(json.wind.speed)}Km/h`;
-
-            const rainVolume = json.rain && json.rain['1h'] ? json.rain['1h'] : 0;
-            if (rain) rain.innerHTML = `${rainVolume} mm`;
-
-            // Gọi API dự báo
-            fetch(endpointForecast)
-                .then(res => res.json())
-                .then(forecastData => {
-                    currentForecastDetails = forecastData;
-
-                    if (forecastData.list && forecastData.list.length > 0) {
-                        const currentPop = Math.round(forecastData.list[0].pop * 100);
-                        if (rainChance) rainChance.innerHTML = `${currentPop}%`;
-
-                        const timezoneOffset = forecastData.city.timezone || 0;
-                        const nextRain = forecastData.list.find(item => item.pop >= 0.3 || (item.weather && item.weather[0].main === 'Rain'));
-
-                        if (nextRain) {
-                            const localDate = new Date((nextRain.dt + timezoneOffset) * 1000);
-                            const hours = String(localDate.getUTCHours()).padStart(2, '0');
-                            const minutes = String(localDate.getUTCMinutes()).padStart(2, '0');
-                            const timeStr = `${hours}:${minutes}`;
-
-                            description.innerHTML = `${json.weather[0].description} <br><span style="font-size: 14px; color: #facc15; font-weight: 600; display: inline-block; margin-top: 5px;">Dự Báo Có Mưa Lúc ~${timeStr} (Giờ Địa Phương)</span>`;
-                        } else {
-                            description.innerHTML = `${json.weather[0].description} <br><span style="font-size: 14px; color: #4ade80; font-weight: 600; display: inline-block; margin-top: 5px;">Trời Tạnh Ráo</span>`;
-                        }
-                    }
-                })
-                .catch(() => {
-                    description.innerHTML = `${json.weather[0].description}`;
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-
-            weatherBox.style.display = '';
-            weatherDetails.style.display = '';
-            weatherBox.classList.add('fadeIn');
-            weatherDetails.classList.add('fadeIn');
-            container.style.height = '670px';
-        })
-        .catch(() => {
-            setLoading(false);
-        });
-}
-
-// Xử lý tìm kiếm qua Geocoding API
-function handleSearch() {
-    const rawInput = input.value.trim();
-    if (rawInput === '') return;
-
-    adjustInputFontSize(rawInput);
-    setLoading(true);
-
-    let query = rawInput;
-    if (!query.toLowerCase().includes('vn') && !query.toLowerCase().includes('vietnam')) {
-        query += ', VN';
-    }
-
-    const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=1&appid=${APIKey}`;
-
-    fetch(geoUrl)
-        .then(res => res.json())
-        .then(data => {
-            if (!data || data.length === 0) {
-                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(rawInput)}&units=metric&lang=vi&appid=${APIKey}`;
-                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(rawInput)}&units=metric&lang=vi&appid=${APIKey}`;
-                getWeatherData(weatherUrl, forecastUrl);
-                return;
-            }
-
-            const { lat, lon } = data[0];
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${APIKey}`;
-            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${APIKey}`;
-            getWeatherData(weatherUrl, forecastUrl);
-        })
-        .catch(() => {
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(rawInput)}&units=metric&lang=vi&appid=${APIKey}`;
-            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(rawInput)}&units=metric&lang=vi&appid=${APIKey}`;
-            getWeatherData(weatherUrl, forecastUrl);
-        });
-}
-
-search.addEventListener('click', handleSearch);
-
-input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSearch();
-});
-
-// Tự động định vị khi mở trang
-window.addEventListener('load', () => {
+// ================= KHỞI TẠO ỨNG DỤNG =================
+document.addEventListener("DOMContentLoaded", () => {
+    // Tự động nhận diện GPS hoặc mặc định nạp TP.HCM
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${APIKey}`;
-                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${APIKey}`;
-                getWeatherData(weatherUrl, forecastUrl);
-            },
-            () => {
-                const defaultCity = 'Ho Chi Minh';
-                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${defaultCity}&units=metric&lang=vi&appid=${APIKey}`;
-                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${defaultCity}&units=metric&lang=vi&appid=${APIKey}`;
-                getWeatherData(weatherUrl, forecastUrl);
-            }
+            (pos) => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+            () => fetchWeatherByCoords(10.8231, 106.6297) // Fallback TP.HCM
         );
+    } else {
+        fetchWeatherByCoords(10.8231, 106.6297);
     }
+
+    // Sự kiện tìm kiếm
+    if (searchBtn) searchBtn.addEventListener("click", handleSearch);
+    if (cityInput) {
+        cityInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") handleSearch();
+        });
+    }
+
+    // Sự kiện âm thanh
+    if (audioToggleBtn) audioToggleBtn.addEventListener("click", toggleAmbientAudio);
 });
 
-// Đóng Popup
-if (closeModal) {
-    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+// ================= XỬ LÝ TÌM KIẾM ĐỊA ĐIỂM =================
+async function handleSearch() {
+    const query = cityInput.value.trim();
+    if (!query) return;
+
+    try {
+        // Dùng Geocoding API để dịch địa danh Việt Nam (kể cả quận/huyện)
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=1&appid=${API_KEY}`;
+        const geoRes = await fetch(geoUrl);
+        const geoData = await geoRes.json();
+
+        if (geoData && geoData.length > 0) {
+            const { lat, lon } = geoData[0];
+            await fetchWeatherByCoords(lat, lon);
+        } else {
+            await fetchWeatherByCityName(query);
+        }
+    } catch (err) {
+        console.error("Lỗi tìm kiếm:", err);
+    }
 }
-if (modal) {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
+
+// ================= GỌI API THEO TỌA ĐỘ =================
+async function fetchWeatherByCoords(lat, lon) {
+    try {
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${API_KEY}`;
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=vi&appid=${API_KEY}`;
+
+        const [weatherRes, forecastRes] = await Promise.all([
+            fetch(weatherUrl),
+            fetch(forecastUrl)
+        ]);
+
+        if (!weatherRes.ok || !forecastRes.ok) return;
+
+        const weatherData = await weatherRes.json();
+        const forecastData = await forecastRes.json();
+
+        displayWeatherData(weatherData, forecastData);
+    } catch (error) {
+        console.error("Lỗi nạp thời tiết:", error);
+    }
+}
+
+// ================= GỌI API THEO TÊN (DỰ PHÒNG) =================
+async function fetchWeatherByCityName(name) {
+    try {
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(name)}&units=metric&lang=vi&appid=${API_KEY}`;
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(name)}&units=metric&lang=vi&appid=${API_KEY}`;
+
+        const [weatherRes, forecastRes] = await Promise.all([
+            fetch(weatherUrl),
+            fetch(forecastUrl)
+        ]);
+
+        if (!weatherRes.ok || !forecastRes.ok) {
+            alert("Không tìm thấy địa điểm này. Vui lòng kiểm tra lại chính tả!");
+            return;
+        }
+
+        const weatherData = await weatherRes.json();
+        const forecastData = await forecastRes.json();
+
+        displayWeatherData(weatherData, forecastData);
+    } catch (error) {
+        console.error("Lỗi fetchWeatherByCityName:", error);
+    }
+}
+
+// ================= CẬP NHẬT GIAO DIỆN CHÍNH =================
+function displayWeatherData(weather, forecast) {
+    if (cityInput) cityInput.value = weather.name.toUpperCase();
+    currentCityTimezoneOffset = weather.timezone || 0;
+
+    // Nhiệt độ & trạng thái
+    if (tempValue) tempValue.textContent = Math.round(weather.main.temp);
+    if (weatherDesc) weatherDesc.textContent = weather.weather[0].description;
+    if (weatherIcon) {
+        weatherIcon.src = `https://openweathermap.org/img/wn/${weather.weather[0].icon}@4x.png`;
+    }
+
+    // 4 thông số hiện tại
+    if (humidityVal) humidityVal.textContent = `${weather.main.humidity}%`;
+    if (windVal) windVal.textContent = `${Math.round(weather.wind.speed * 3.6)} km/h`;
+
+    const rain1h = (weather.rain && weather.rain["1h"]) ? weather.rain["1h"] : 0;
+    if (rainVolVal) rainVolVal.textContent = `${rain1h} mm`;
+
+    const nextPop = (forecast.list && forecast.list.length > 0) ? Math.round((forecast.list[0].pop || 0) * 100) : 0;
+    if (rainPopVal) rainPopVal.textContent = `${nextPop}%`;
+
+    // Giờ mưa & dự báo 5 ngày
+    if (forecast.list) {
+        processRainForecast(forecast.list);
+        renderNext5Days(forecast.list);
+    }
+
+    // Âm thanh môi trường
+    if (weather.weather && weather.weather[0]) {
+        updateAudioTrack(weather.weather[0].main.toLowerCase());
+    }
+}
+
+// ================= TÍNH GIỜ CÓ MƯA =================
+function processRainForecast(forecastItems) {
+    if (!rainNotice) return;
+
+    const rainItem = forecastItems.slice(0, 8).find(item => (item.pop && item.pop >= 0.3) || (item.rain && item.rain["3h"] > 0));
+
+    if (rainItem) {
+        const targetUtc = (rainItem.dt + currentCityTimezoneOffset) * 1000;
+        const targetDate = new Date(targetUtc);
+        const hours = String(targetDate.getUTCHours()).padStart(2, "0");
+        const minutes = String(targetDate.getUTCMinutes()).padStart(2, "0");
+
+        rainNotice.textContent = `Dự Báo Có Mưa Lúc ~${hours}:${minutes} (Giờ Địa Phương)`;
+    } else {
+        rainNotice.textContent = "Hôm nay không có mưa";
+    }
+}
+
+// ================= RENDER DỰ BÁO 5 NGÀY ĐẦY ĐỦ THỨ & NGÀY THÁNG NĂM =================
+function getVietnameseDay(date) {
+    const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+    return days[date.getDay()];
+}
+
+function renderNext5Days(forecastItems) {
+    if (!forecastList) return;
+    forecastList.innerHTML = "";
+    forecastDaysStorage = {}; // Reset bộ nhớ chi tiết ngày
+
+    // Xác định ngày hôm nay theo múi giờ địa phương để bỏ qua
+    const nowUtc = (Math.floor(Date.now() / 1000) + currentCityTimezoneOffset) * 1000;
+    const todayStr = new Date(nowUtc).toISOString().split('T')[0];
+
+    // Gom dữ liệu các mốc 3h theo từng ngày
+    const daysMap = {};
+    forecastItems.forEach(item => {
+        const itemUtc = (item.dt + currentCityTimezoneOffset) * 1000;
+        const dateStr = new Date(itemUtc).toISOString().split('T')[0];
+
+        if (dateStr === todayStr) return; // Bỏ qua ngày hôm nay
+
+        if (!daysMap[dateStr]) daysMap[dateStr] = [];
+        daysMap[dateStr].push(item);
     });
-}
 
-// 1. Click vào ô ĐỘ ẨM
-const humidityBox = document.querySelector('.weather-details .humidity');
-if (humidityBox) {
-    humidityBox.addEventListener('click', () => {
-        if (!currentWeatherDetails || !modal) return;
-        const h = currentWeatherDetails.main.humidity;
-        let advice = '';
-        if (h < 45) advice = 'Không khí khô hanh, nên uống thêm nước để tránh mất nước.';
-        else if (h <= 70) advice = 'Mức độ ẩm lý tưởng, cơ thể cảm thấy dễ chịu và mát mẻ.';
-        else advice = 'Độ ẩm cao gây cảm giác oi nồng và khó thoát mồ hôi.';
+    const next5DaysKeys = Object.keys(daysMap).slice(0, 5);
 
-        modalTitle.innerHTML = '<i class="fa-solid fa-water"></i> Chi Tiết Độ Ẩm';
-        modalDesc.innerHTML = `
-            <b>Độ ẩm thực tế:</b> ${h}%<br>
-            <b>Nhiệt độ cảm nhận:</b> ${Math.round(currentWeatherDetails.main.feels_like)}°C<br>
-            <b>Áp suất khí quyển:</b> ${currentWeatherDetails.main.pressure} hPa<br><br>
-            <em>${advice}</em>
+    next5DaysKeys.forEach(dateStr => {
+        const entries = daysMap[dateStr];
+        // Lấy mốc gần 12h trưa làm đại diện
+        const midDay = entries.find(e => e.dt_txt && e.dt_txt.includes("12:00:00")) || entries[Math.floor(entries.length / 2)];
+
+        // Tách năm, tháng, ngày chuẩn
+        const [year, month, day] = dateStr.split('-');
+        const formattedDate = `${day}/${month}/${year}`;
+
+        const dateObj = new Date(dateStr + "T00:00:00");
+        const dayName = getVietnameseDay(dateObj); // "Thứ 7", "Chủ Nhật", v.v.
+        const fullDayTitle = `${dayName}, ${formattedDate}`; // "Thứ 7, 19/09/2026"
+
+        // Tính các chỉ số trung bình / cực đại của ngày hôm đó
+        const temp = Math.round(midDay.main.temp);
+        const desc = midDay.weather[0].description;
+        const iconCode = midDay.weather[0].icon;
+        const humidity = midDay.main.humidity;
+        const windSpeed = Math.round(midDay.wind.speed * 3.6);
+
+        // Khả năng mưa cao nhất trong các mốc của ngày
+        const maxPop = Math.round(Math.max(...entries.map(e => e.pop || 0)) * 100);
+        // Tổng lượng mưa dự kiến trong ngày
+        const totalRain = entries.reduce((acc, curr) => acc + ((curr.rain && curr.rain["3h"]) ? curr.rain["3h"] : 0), 0);
+
+        // Lưu vào bộ nhớ theo key dateStr để khi click sẽ mở popup
+        forecastDaysStorage[dateStr] = {
+            title: fullDayTitle,
+            temp: temp,
+            desc: desc,
+            icon: iconCode,
+            humidity: humidity,
+            wind: windSpeed,
+            rainVol: totalRain.toFixed(2),
+            pop: maxPop
+        };
+
+        // Tạo thẻ hàng hiển thị
+        const row = document.createElement('div');
+        row.className = 'forecast-row';
+        row.setAttribute('onclick', `openDayDetailModal('${dateStr}')`);
+        row.innerHTML = `
+            <div class="forecast-date-col">
+                <span class="forecast-row-day">${dayName}</span>
+                <span class="forecast-row-subdate">${formattedDate}</span>
+            </div>
+            <img class="forecast-row-icon" src="https://openweathermap.org/img/wn/${iconCode}.png" alt="icon">
+            <span class="forecast-row-desc">${desc}</span>
+            <span class="forecast-row-temp">${temp}°C</span>
         `;
-        modal.classList.add('active');
+        forecastList.appendChild(row);
     });
 }
 
-// 2. Click vào ô TỐC ĐỘ GIÓ
-const windBox = document.querySelector('.weather-details .wind');
-if (windBox) {
-    windBox.addEventListener('click', () => {
-        if (!currentWeatherDetails || !modal) return;
-        const speed = Math.round(currentWeatherDetails.wind.speed * 3.6);
-        const deg = currentWeatherDetails.wind.deg || 0;
-        const gust = currentWeatherDetails.wind.gust ? `${Math.round(currentWeatherDetails.wind.gust * 3.6)} km/h` : 'Không đáng kể';
+// ================= MODAL XEM CHI TIẾT TỪNG NGÀY =================
+function openDayDetailModal(dateKey) {
+    const data = forecastDaysStorage[dateKey];
+    if (!data) return;
 
-        const directions = ['Bắc', 'Đông Bắc', 'Đông', 'Đông Nam', 'Nam', 'Tây Nam', 'Tây', 'Tây Bắc'];
-        const dirIndex = Math.round(deg / 45) % 8;
-        const windDir = directions[dirIndex];
+    document.getElementById("dayModalTitle").textContent = data.title;
+    document.getElementById("dayModalTemp").textContent = `${data.temp}°C`;
+    document.getElementById("dayModalDesc").textContent = data.desc;
+    document.getElementById("dayModalIcon").src = `https://openweathermap.org/img/wn/${data.icon}@2x.png`;
 
-        let windLevel = '';
-        if (speed < 6) windLevel = 'Cấp 1: Gió nhẹ, khẽ thoảng lá bay';
-        else if (speed <= 19) windLevel = 'Cấp 2 - 3: Gió hiu hiu, cảm nhận rõ rệt trên mặt';
-        else if (speed <= 38) windLevel = 'Cấp 4 - 5: Gió vừa, cành nhỏ lay động liên tục';
-        else windLevel = 'Cấp 6 trở lên: Gió mạnh, cần thận trọng khi điều khiển xe';
+    document.getElementById("dayModalHumidity").textContent = `${data.humidity}%`;
+    document.getElementById("dayModalWind").textContent = `${data.wind} km/h`;
+    document.getElementById("dayModalRainVol").textContent = `${data.rainVol} mm`;
+    document.getElementById("dayModalPop").textContent = `${data.pop}%`;
 
-        modalTitle.innerHTML = '<i class="fa-solid fa-wind"></i> Chi Tiết Sức Gió';
-        modalDesc.innerHTML = `
-            <b>Tốc độ gió:</b> ${speed} km/h<br>
-            <b>Gió giật:</b> ${gust}<br>
-            <b>Hướng gió:</b> ${windDir} (${deg}°)<br>
-            <b>Đánh giá:</b> ${windLevel}
-        `;
-        modal.classList.add('active');
-    });
+    document.getElementById("dayDetailModal").classList.add("active");
 }
 
-// 3. Click vào ô LƯỢNG MƯA
-const rainBox = document.querySelector('.weather-details .rain');
-if (rainBox) {
-    rainBox.addEventListener('click', () => {
-        if (!currentWeatherDetails || !modal) return;
-        const rainVol = currentWeatherDetails.rain && currentWeatherDetails.rain['1h'] ? currentWeatherDetails.rain['1h'] : 0;
-        let rainStatus = '';
-        if (rainVol === 0) rainStatus = 'Không ghi nhận lượng mưa trong 1 giờ qua.';
-        else if (rainVol < 2.5) rainStatus = 'Mưa phùn / Mưa hạt nhỏ rải rác.';
-        else if (rainVol < 10) rainStatus = 'Mưa vừa, nên trang bị áo mưa hoặc dù.';
-        else rainStatus = 'Mưa to đến rất to, đề phòng ngập úng cục bộ.';
-
-        modalTitle.innerHTML = '<i class="fa-solid fa-cloud-showers-heavy"></i> Chi Tiết Lượng Mưa';
-        modalDesc.innerHTML = `
-            <b>Lượng mưa (1 giờ qua):</b> ${rainVol} mm<br>
-            <b>Tình trạng:</b> ${rainStatus}
-        `;
-        modal.classList.add('active');
-    });
+function closeDayDetailModal() {
+    const modal = document.getElementById("dayDetailModal");
+    if (modal) modal.classList.remove("active");
 }
 
-// 4. Click vào ô KHẢ NĂNG MƯA
-const rainChanceBox = document.querySelector('.weather-details .rain-chance');
-if (rainChanceBox) {
-    rainChanceBox.addEventListener('click', () => {
-        if (!currentForecastDetails || !modal) return;
-        const pop = currentForecastDetails.list && currentForecastDetails.list[0] ? Math.round(currentForecastDetails.list[0].pop * 100) : 0;
-        modalTitle.innerHTML = '<i class="fa-solid fa-cloud-rain"></i> Khả Năng Mưa';
-        modalDesc.innerHTML = `
-            <b>Xác suất có mưa (3h tới):</b> ${pop}%<br>
-            <b>Dự báo:</b> ${pop >= 50 ? 'Khả năng cao sẽ có mưa, hãy chuẩn bị ô hoặc áo mưa khi ra ngoài.' : 'Khả năng có mưa thấp, thời tiết thuận lợi cho các hoạt động ngoài trời.'}
-        `;
-        modal.classList.add('active');
-    });
+// ================= MODAL GIẢI THÍCH CHỈ SỐ =================
+const modalInfoMap = {
+    humidity: {
+        title: "Độ Ẩm Không Khí",
+        desc: "Tỷ lệ phần trăm hơi nước hiện có trong không khí so với mức bão hòa. Độ ẩm từ 40% - 60% mang lại cảm giác thoải mái nhất cho cơ thể."
+    },
+    wind: {
+        title: "Tốc Độ Gió",
+        desc: "Vận tốc di chuyển của luồng không khí được đo theo đơn vị km/h. Gió dưới 15 km/h là gió hiu hiu dễ chịu, trên 40 km/h là gió giật mạnh."
+    },
+    rain_volume: {
+        title: "Lượng Mưa Trong 1 Giờ",
+        desc: "Tổng chiều cao lượng nước mưa đo được trên một đơn vị diện tích trong vòng 1 giờ qua. Dưới 2 mm là mưa phùn nhẹ, trên 10 mm là mưa rào lớn."
+    },
+    rain_pop: {
+        title: "Khả Năng Có Mưa",
+        desc: "Xác suất xảy ra mưa tại khu vực trong vài giờ tới dựa trên mô hình vệ tinh khí tượng."
+    }
+};
+
+function openMetricModal(metricKey) {
+    const info = modalInfoMap[metricKey];
+    if (!info) return;
+
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const metricModal = document.getElementById("metricModal");
+
+    if (modalTitle) modalTitle.textContent = info.title;
+    if (modalBody) modalBody.textContent = info.desc;
+    if (metricModal) metricModal.classList.add("active");
+}
+
+function closeMetricModal() {
+    const metricModal = document.getElementById("metricModal");
+    if (metricModal) metricModal.classList.remove("active");
+}
+
+// ================= ÂM THANH MÔI TRƯỜNG =================
+function updateAudioTrack(condition) {
+    if (!ambientAudio) return;
+    if (condition.includes("rain") || condition.includes("drizzle") || condition.includes("thunderstorm")) {
+        ambientAudio.src = AUDIO_SOURCES.rain;
+    } else {
+        ambientAudio.src = AUDIO_SOURCES.ambient;
+    }
+
+    if (isAudioPlaying) {
+        ambientAudio.play().catch(() => {});
+    }
+}
+
+function toggleAmbientAudio() {
+    if (!ambientAudio) return;
+    if (!ambientAudio.src) ambientAudio.src = AUDIO_SOURCES.ambient;
+
+    if (isAudioPlaying) {
+        ambientAudio.pause();
+        isAudioPlaying = false;
+        if (audioIcon) audioIcon.className = "fa-solid fa-volume-xmark";
+    } else {
+        ambientAudio.play().then(() => {
+            isAudioPlaying = true;
+            if (audioIcon) audioIcon.className = "fa-solid fa-volume-high";
+        }).catch(() => {
+            console.log("Cần tương tác người dùng để phát âm thanh");
+        });
+    }
 }
