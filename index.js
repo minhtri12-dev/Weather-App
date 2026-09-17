@@ -14,6 +14,7 @@ const appState = {
     currentCondition: "",
     clockTimer: null,
     forecastCache: {},
+    hourlyCache: {}, // Bộ nhớ cache dữ liệu chi tiết của từng mốc giờ
     isAudioPlaying: false
 };
 
@@ -131,7 +132,7 @@ function renderRain() {
     animFrameId = requestAnimationFrame(renderRain);
 }
 
-// ================= ĐỒNG HỒ THỜI GIAN THỰC (SỐ & KIM QUAY) =================
+// ================= ĐỒNG HỒ THỜI GIAN THỰC =================
 function startLiveClock() {
     if (appState.clockTimer) clearInterval(appState.clockTimer);
     updateClockTick();
@@ -152,7 +153,6 @@ function updateClockTick() {
 
     applyAtmosphereTheme(hours, minutes, appState.currentCondition);
 
-    // Đồng hồ số
     if (elements.digitalTime) {
         elements.digitalTime.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     }
@@ -169,7 +169,6 @@ function updateClockTick() {
         elements.digitalTimezoneLabel.textContent = `GMT${offsetHours >= 0 ? "+" : ""}${offsetHours}`;
     }
 
-    // XOAY KIM ĐỒNG HỒ CƠ HỌC MINI
     const secondDeg = (seconds / 60) * 360;
     const minuteDeg = ((minutes + seconds / 60) / 60) * 360;
     const hourDeg = (((hours % 12) + minutes / 60) / 12) * 360;
@@ -376,13 +375,33 @@ function renderTodayHourly(forecastList) {
         elements.rainNotice.textContent = "Hôm nay ít khả năng có mưa";
     }
 
-    todaySlots.forEach(slot => {
+    todaySlots.forEach((slot, index) => {
         const timeStr = formatHour(slot.dt, appState.timezoneOffset);
         const popVal = Math.round((slot.pop || 0) * 100);
         const isRainRisk = popVal >= 40;
 
+        const rainVol = (slot.rain && slot.rain["3h"]) ? slot.rain["3h"] : 0;
+        const visibilityKm = slot.visibility ? (slot.visibility / 1000).toFixed(1) : "10";
+        const dateObj = new Date((slot.dt + appState.timezoneOffset) * 1000);
+        const dateStr = `${String(dateObj.getUTCDate()).padStart(2, "0")}/${String(dateObj.getUTCMonth() + 1).padStart(2, "0")}/${dateObj.getUTCFullYear()}`;
+
+        const hKey = `today_hour_${index}`;
+        appState.hourlyCache[hKey] = {
+            title: `Khung giờ ${timeStr}, ${dateStr}`,
+            temp: Math.round(slot.main.temp),
+            desc: slot.weather[0].description,
+            icon: slot.weather[0].icon,
+            humidity: slot.main.humidity,
+            wind: Math.round(slot.wind.speed * 3.6),
+            rainVol: rainVol.toFixed(1),
+            pop: popVal,
+            visibility: visibilityKm,
+            isHourly: true
+        };
+
         const node = document.createElement("div");
         node.className = `hour-node ${isRainRisk ? "rain-risk" : ""}`;
+        node.dataset.hourKey = hKey;
         node.innerHTML = `
             <span class="h-time">${timeStr}</span>
             <img src="https://openweathermap.org/img/wn/${slot.weather[0].icon}.png" alt="icon">
@@ -413,15 +432,13 @@ function render5DayForecast(forecastItems) {
     const daysKeys = Object.keys(grouped).slice(0, 5);
     const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
-    daysKeys.forEach(dateKey => {
+    daysKeys.forEach((dateKey, dayIdx) => {
         const daySlots = grouped[dateKey];
         const midSlot = daySlots.find(s => s.dt_txt && s.dt_txt.includes("12:00:00")) || daySlots[Math.floor(daySlots.length / 2)];
 
         const dateObj = new Date(dateKey + "T00:00:00");
         const dayLabel = dayNames[dateObj.getDay()];
         const [year, month, day] = dateKey.split('-');
-        
-        // HIỂN THỊ ĐẦY ĐỦ CẢ NĂM: 19/09/2026
         const fullDateNumeric = `${day}/${month}/${year}`;
 
         let maxPop = 0;
@@ -435,6 +452,34 @@ function render5DayForecast(forecastItems) {
         });
 
         const totalRain = daySlots.reduce((sum, curr) => sum + ((curr.rain && curr.rain["3h"]) ? curr.rain["3h"] : 0), 0);
+        const visibilityKm = midSlot.visibility ? (midSlot.visibility / 1000).toFixed(1) : "10";
+
+        const hourlySlotsData = daySlots.map((s, sIdx) => {
+            const hKey = `day_${dayIdx}_slot_${sIdx}`;
+            const slotRain = (s.rain && s.rain["3h"]) ? s.rain["3h"] : 0;
+            const slotVis = s.visibility ? (s.visibility / 1000).toFixed(1) : "10";
+            
+            appState.hourlyCache[hKey] = {
+                title: `Khung giờ ${formatHour(s.dt, appState.timezoneOffset)}, ${fullDateNumeric}`,
+                temp: Math.round(s.main.temp),
+                desc: s.weather[0].description,
+                icon: s.weather[0].icon,
+                humidity: s.main.humidity,
+                wind: Math.round(s.wind.speed * 3.6),
+                rainVol: slotRain.toFixed(1),
+                pop: Math.round((s.pop || 0) * 100),
+                visibility: slotVis,
+                isHourly: true
+            };
+
+            return {
+                time: formatHour(s.dt, appState.timezoneOffset),
+                icon: s.weather[0].icon,
+                temp: Math.round(s.main.temp),
+                pop: Math.round((s.pop || 0) * 100),
+                cacheKey: hKey
+            };
+        });
 
         appState.forecastCache[dateKey] = {
             title: `${dayLabel}, ${fullDateNumeric}`,
@@ -445,13 +490,10 @@ function render5DayForecast(forecastItems) {
             wind: Math.round(midSlot.wind.speed * 3.6),
             rainVol: totalRain.toFixed(1),
             pop: maxPop,
+            visibility: visibilityKm,
             peakHour: peakHour,
-            hourlySlots: daySlots.map(s => ({
-                time: formatHour(s.dt, appState.timezoneOffset),
-                icon: s.weather[0].icon,
-                temp: Math.round(s.main.temp),
-                pop: Math.round((s.pop || 0) * 100)
-            }))
+            isHourly: false,
+            hourlySlots: hourlySlotsData
         };
 
         const itemEl = document.createElement("div");
@@ -490,9 +532,7 @@ function setupEventDelegation() {
         elements.quickCitiesBar.addEventListener("click", (e) => {
             const btn = e.target.closest(".city-pill");
             if (!btn) return;
-            const query = btn.dataset.query;
-            const label = btn.dataset.label;
-            searchCity(query, label);
+            searchCity(btn.dataset.query, btn.dataset.label);
         });
     }
 
@@ -500,18 +540,39 @@ function setupEventDelegation() {
         elements.forecastList.addEventListener("click", (e) => {
             const row = e.target.closest(".forecast-item");
             if (!row) return;
-            const dateKey = row.dataset.date;
-            openDayModal(dateKey);
+            openModal(appState.forecastCache[row.dataset.date]);
         });
     }
 
-    if (elements.modalCloseBtn) elements.modalCloseBtn.addEventListener("click", closeDayModal);
-    if (elements.modalScrim) elements.modalScrim.addEventListener("click", closeDayModal);
+    if (elements.todayHourlyTrack) {
+        elements.todayHourlyTrack.addEventListener("click", (e) => {
+            const node = e.target.closest(".hour-node");
+            if (!node) return;
+            const hKey = node.dataset.hourKey;
+            if (appState.hourlyCache[hKey]) {
+                openModal(appState.hourlyCache[hKey]);
+            }
+        });
+    }
+
+    const modalHourlyList = document.getElementById("dayModalHourlyList");
+    if (modalHourlyList) {
+        modalHourlyList.addEventListener("click", (e) => {
+            const node = e.target.closest(".hour-node");
+            if (!node) return;
+            const hKey = node.dataset.hourKey;
+            if (appState.hourlyCache[hKey]) {
+                openModal(appState.hourlyCache[hKey]);
+            }
+        });
+    }
+
+    if (elements.modalCloseBtn) elements.modalCloseBtn.addEventListener("click", closeModal);
+    if (elements.modalScrim) elements.modalScrim.addEventListener("click", closeModal);
 
     document.querySelectorAll("[data-metric]").forEach(el => {
         el.addEventListener("click", () => {
-            const metricType = el.dataset.metric;
-            openMetricInfoModal(metricType);
+            openMetricInfoModal(el.dataset.metric);
         });
     });
 
@@ -522,14 +583,13 @@ function setupEventDelegation() {
 
     window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
-            closeDayModal();
+            closeModal();
             closeInfoModal();
         }
     });
 }
 
-function openDayModal(dateKey) {
-    const data = appState.forecastCache[dateKey];
+function openModal(data) {
     if (!data || !elements.dayDetailModal) return;
 
     document.getElementById("dayModalTitle").textContent = data.title;
@@ -539,30 +599,40 @@ function openDayModal(dateKey) {
     document.getElementById("dayModalHumidity").textContent = `${data.humidity}%`;
     document.getElementById("dayModalWind").textContent = `${data.wind} km/h`;
     document.getElementById("dayModalRainVol").textContent = `${data.rainVol} mm`;
+    document.getElementById("dayModalVisibility").textContent = `${data.visibility} km`;
 
-    const popText = data.pop > 0 && data.peakHour 
+    const popText = data.pop > 0 && data.peakHour && !data.isHourly
         ? `${data.pop}% (Khả năng cao lúc ~${data.peakHour})`
         : `${data.pop}%`;
     document.getElementById("dayModalPop").textContent = popText;
 
-    const hourlyWrap = document.getElementById("dayModalHourlyList");
-    hourlyWrap.innerHTML = "";
-    data.hourlySlots.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "hour-node";
-        div.innerHTML = `
-            <span class="h-time">${s.time}</span>
-            <img src="https://openweathermap.org/img/wn/${s.icon}.png" alt="icon">
-            <span class="h-temp">${s.temp}°</span>
-            <span class="h-pop">${s.pop > 0 ? s.pop + '%' : '--'}</span>
-        `;
-        hourlyWrap.appendChild(div);
-    });
+    const hourlySection = document.getElementById("modalHourlySection");
+    if (data.isHourly) {
+        if (hourlySection) hourlySection.style.display = "none";
+    } else {
+        if (hourlySection) hourlySection.style.display = "flex";
+        const hourlyWrap = document.getElementById("dayModalHourlyList");
+        hourlyWrap.innerHTML = "";
+        
+        data.hourlySlots.forEach(s => {
+            const div = document.createElement("div");
+            div.className = "hour-node";
+            div.style.cursor = "pointer";
+            div.dataset.hourKey = s.cacheKey;
+            div.innerHTML = `
+                <span class="h-time">${s.time}</span>
+                <img src="https://openweathermap.org/img/wn/${s.icon}.png" alt="icon">
+                <span class="h-temp">${s.temp}°</span>
+                <span class="h-pop">${s.pop > 0 ? s.pop + '%' : '--'}</span>
+            `;
+            hourlyWrap.appendChild(div);
+        });
+    }
 
     elements.dayDetailModal.classList.add("active");
 }
 
-function closeDayModal() {
+function closeModal() {
     if (elements.dayDetailModal) elements.dayDetailModal.classList.remove("active");
 }
 
@@ -574,7 +644,7 @@ function openMetricInfoModal(type) {
         },
         wind: {
             title: "Tốc độ gió",
-            body: "Vận tốc di chuyển của luồng không khí. Dưới 15 km/h là gió mát nhẹ, từ 20 - 35 km/h là gió vừa, trên 40 km/h là gió lớn cần chú ý an toàn khi di chuyển."
+            body: "Vận tốc di chuyển của luồng không khí. Dưới 15 km/h là gió mát nhẹ, từ 20 - 35 km/h là gió vừa, trên 40 km/h là gió giật mạnh."
         },
         rain_volume: {
             title: "Lượng nước mưa",
@@ -630,7 +700,7 @@ function toggleAudio() {
     }
 }
 
-// ================= KHỞI ĐỘNG ỨNG DỤNG AN TOÀN =================
+// ================= KHỞI ĐỘNG ỨNG DỤNG =================
 document.addEventListener("DOMContentLoaded", () => {
     initDOMElements();
     setupRainCanvas();

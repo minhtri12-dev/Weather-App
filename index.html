@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>SkyCast — Bảng Thời Tiết & Thời Gian Thực</title>
+
+     <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/weather.png">
+
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,7 +129,7 @@
                     </div>
                 </div>
 
-                <!-- Timeline mưa theo giờ tích hợp ngay trên bảng chính -->
+                <!-- Timeline mưa theo giờ (Click vào từng giờ để xem chi tiết) -->
                 <div class="hourly-strip-card">
                     <div class="strip-header">
                         <span class="strip-title">Khả năng mưa trong ngày</span>
@@ -193,7 +198,7 @@
         </footer>
     </div>
 
-    <!-- Modal Xem Chi Tiết Ngày -->
+    <!-- Modal Xem Chi Tiết Ngày hoặc Khung Giờ -->
     <div id="dayDetailModal" class="app-modal">
         <div class="modal-scrim" id="modalScrim"></div>
         <div class="modal-card">
@@ -226,9 +231,13 @@
                     <span class="m-label">Khả năng mưa</span>
                     <strong id="dayModalPop">--%</strong>
                 </div>
+                <div class="modal-metric-item" style="grid-column: span 2;">
+                    <span class="m-label">Tầm nhìn xa</span>
+                    <strong id="dayModalVisibility">-- km</strong>
+                </div>
             </div>
 
-            <div class="modal-hourly-box">
+            <div class="modal-hourly-box" id="modalHourlySection">
                 <div class="box-title">Diễn biến các khung giờ trong ngày</div>
                 <div class="modal-hourly-track" id="dayModalHourlyList"></div>
             </div>
