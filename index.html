@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự Báo Thời Tiết</title>
+    <!-- Font Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- File CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Nút bật / tắt âm thanh thư giãn theo thời tiết -->
+    <button class="sound-toggle-btn" id="soundToggle" title="Bật/Tắt âm thanh thư giãn">
+        <i class="fa-solid fa-volume-xmark"></i>
+    </button>
+
+    <div class="container">
+        <!-- Khung tìm kiếm -->
+        <div class="search-box">
+            <i class="fa-solid fa-location-dot"></i>
+            <input type="text" placeholder="Nhập vị trí...">
+            <button class="fa-solid fa-magnifying-glass"></button>
+        </div>
+
+        <!-- Báo lỗi không tìm thấy -->
+        <div class="not-found">
+            <img src="images/404.png" alt="Không tìm thấy">
+            <p>Không tìm thấy địa điểm :/</p>
+        </div>
+
+        <!-- Khối hiển thị thời tiết chính -->
+        <div class="weather-box">
+            <img src="" alt="Thời tiết">
+            <p class="temperature"></p>
+            <p class="description"></p>
+        </div>
+
+        <!-- Lưới 4 thông số chi tiết (click để xem popup) -->
+        <div class="weather-details">
+            <div class="humidity" title="Click để xem chi tiết độ ẩm">
+                <i class="fa-solid fa-water"></i>
+                <div class="text">
+                    <span></span>
+                    <p>Độ ẩm</p>
+                </div>
+            </div>
+
+            <div class="wind" title="Click để xem chi tiết sức gió">
+                <i class="fa-solid fa-wind"></i>
+                <div class="text">
+                    <span></span>
+                    <p>Tốc độ gió</p>
+                </div>
+            </div>
+
+            <div class="rain" title="Click để xem chi tiết lượng mưa">
+                <i class="fa-solid fa-cloud-showers-heavy"></i>
+                <div class="text">
+                    <span>0 mm</span>
+                    <p>Lượng mưa (1h)</p>
+                </div>
+            </div>
+
+            <div class="rain-chance" title="Click để xem chi tiết xác suất mưa">
+                <i class="fa-solid fa-cloud-rain"></i>
+                <div class="text">
+                    <span>0%</span>
+                    <p>Khả năng mưa</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Popup chi tiết kính mờ khi bấm vào các ô thông số -->
+        <div class="detail-modal" id="detailModal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3 id="modalTitle">Chi tiết</h3>
+                <div id="modalDesc">Nội dung chi tiết...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File JavaScript -->
+    <script src="index.js"></script>
+</body>
+</html>
