@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>SkyCast — Bảng Thời Tiết & Thời Gian Thực</title>
-
-     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="images/weather.png">
-
+    <title>SkyCast — Bảng Thời Tiết & Trợ Lý Phong Cách Sống</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +30,9 @@
             </div>
 
             <div class="header-actions">
+                <button id="optimalTimeBtn" class="action-btn gold-btn" title="Gợi ý khung giờ vàng cho hoạt động">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
                 <button id="audioToggleBtn" class="action-btn" title="Bật/Tắt âm thanh môi trường">
                     <i class="fa-solid fa-volume-xmark" id="audioIcon"></i>
                 </button>
@@ -74,7 +72,7 @@
                         </div>
                     </div>
 
-                    <!-- ĐỒNG HỒ KIM MINI THỜI GIAN THỰC ĐANG QUAY -->
+                    <!-- ĐỒNG HỒ KIM MINI THỜI GIAN THỰC -->
                     <div class="hero-analog-clock" title="Giờ địa phương trực tiếp">
                         <div class="analog-clock-dial">
                             <span class="ac-mark m-12"></span>
@@ -129,15 +127,13 @@
                     </div>
                 </div>
 
-                <!-- Timeline mưa theo giờ (Click vào từng giờ để xem chi tiết) -->
+                <!-- Timeline mưa theo giờ -->
                 <div class="hourly-strip-card">
                     <div class="strip-header">
                         <span class="strip-title">Khả năng mưa trong ngày</span>
                         <span class="rain-summary" id="rainNotice">Kiểm tra khả năng mưa...</span>
                     </div>
-                    <div class="hourly-track" id="todayHourlyTrack">
-                        <!-- Mốc giờ nạp động qua JS -->
-                    </div>
+                    <div class="hourly-track" id="todayHourlyTrack"></div>
                 </div>
             </section>
 
@@ -186,9 +182,7 @@
                         <h3>Dự báo 5 ngày tới</h3>
                         <span class="forecast-sub">Bấm vào từng ngày để xem phân tích chi tiết</span>
                     </div>
-                    <div class="forecast-list" id="forecastList">
-                        <!-- Render qua JS -->
-                    </div>
+                    <div class="forecast-list" id="forecastList"></div>
                 </div>
             </section>
         </main>
@@ -215,26 +209,12 @@
             </div>
 
             <div class="modal-metrics-grid">
-                <div class="modal-metric-item">
-                    <span class="m-label">Độ ẩm</span>
-                    <strong id="dayModalHumidity">--%</strong>
-                </div>
-                <div class="modal-metric-item">
-                    <span class="m-label">Tốc độ gió</span>
-                    <strong id="dayModalWind">-- km/h</strong>
-                </div>
-                <div class="modal-metric-item">
-                    <span class="m-label">Lượng mưa</span>
-                    <strong id="dayModalRainVol">0 mm</strong>
-                </div>
-                <div class="modal-metric-item">
-                    <span class="m-label">Khả năng mưa</span>
-                    <strong id="dayModalPop">--%</strong>
-                </div>
-                <div class="modal-metric-item" style="grid-column: span 2;">
-                    <span class="m-label">Tầm nhìn xa</span>
-                    <strong id="dayModalVisibility">-- km</strong>
-                </div>
+                <div class="modal-metric-item"><span class="m-label">Độ ẩm</span><strong id="dayModalHumidity">--%</strong></div>
+                <div class="modal-metric-item"><span class="m-label">Tốc độ gió</span><strong id="dayModalWind">-- km/h</strong></div>
+                <div class="modal-metric-item"><span class="m-label">Lượng mưa</span><strong id="dayModalRainVol">0 mm</strong></div>
+                <div class="modal-metric-item"><span class="m-label">Khả năng mưa</span><strong id="dayModalPop">--%</strong></div>
+                <div class="modal-metric-item"><span class="m-label">Tầm nhìn xa</span><strong id="dayModalVisibility">-- km</strong></div>
+                <div class="modal-metric-item"><span class="m-label">Chỉ số Tia UV</span><strong id="dayModalUV">--</strong></div>
             </div>
 
             <div class="modal-hourly-box" id="modalHourlySection">
@@ -244,7 +224,20 @@
         </div>
     </div>
 
-    <!-- Modal Thông Số Giải Thích AQI / Chỉ Số -->
+    <!-- Modal Gợi Ý Khung Giờ Vàng Hoạt Động -->
+    <div id="optimalModal" class="app-modal">
+        <div class="modal-scrim" id="optimalModalScrim"></div>
+        <div class="modal-card">
+            <button class="modal-close" id="optimalModalCloseBtn" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-medal" style="color: var(--accent-yellow);"></i> Khung Giờ Vàng Hôm Nay</h3>
+                <span class="forecast-sub">Được hệ thống lọc tự động dựa trên thời tiết thực tế</span>
+            </div>
+            <div class="optimal-results-list" id="optimalResultsList" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Thông Số Giải Thích -->
     <div id="infoModal" class="app-modal">
         <div class="modal-scrim" id="infoModalScrim"></div>
         <div class="modal-card info-card">
