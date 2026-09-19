@@ -1,12 +1,12 @@
 :root {
-    --bg-primary: #0a1118;
-    --bg-surface: rgba(17, 28, 38, 0.88);
-    --bg-surface-elevated: rgba(22, 36, 50, 0.88);
-    --border-color: rgba(255, 255, 255, 0.12);
+    --bg-primary: #0f172a;
+    --bg-surface: rgba(30, 41, 59, 0.85); /* Sáng hơn theo ảnh reference */
+    --bg-surface-elevated: rgba(51, 65, 85, 0.6);
+    --border-color: rgba(255, 255, 255, 0.1);
     --border-hover: rgba(255, 255, 255, 0.25);
-    --text-primary: #ffffff;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
     --accent-blue: #38bdf8;
     --accent-yellow: #facc15;
     --accent-green: #34d399;
@@ -28,23 +28,89 @@ body {
     justify-content: center;
     align-items: flex-start;
     padding: 32px 20px;
-    transition: background 1.2s ease;
+    transition: background 1.5s ease;
     overflow-x: hidden;
     position: relative;
+    background: var(--bg-primary);
 }
 
-body.theme-day { background: linear-gradient(135deg, #0284c7 0%, #38bdf8 50%, #0369a1 100%); }
-body.theme-day .dash-panel, body.theme-day .app-header { background: rgba(10, 24, 38, 0.8); backdrop-filter: blur(20px); box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35); }
-body.theme-sunset { background: linear-gradient(135deg, #4c1d95 0%, #db2777 50%, #f97316 100%); }
-body.theme-sunset .dash-panel, body.theme-sunset .app-header { background: rgba(22, 16, 36, 0.82); backdrop-filter: blur(20px); }
-body.theme-night { background: radial-gradient(circle at 10% 10%, #0f1c29 0%, #080f16 60%, #05080c 100%); }
-body.theme-night .dash-panel, body.theme-night .app-header { background: var(--bg-surface); }
-body.theme-rain { background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%); }
-body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 23, 34, 0.85); }
+/* Các theme nền ĐÃ ĐƯỢC CHỈNH SÁNG HƠN THÀNH MÀU SLATE BLUE LỢT LỢT Y HỆT ẢNH */
+body.theme-day { background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #0284c7 100%); }
+body.theme-day .dash-panel, body.theme-day .app-header { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); }
 
-#weatherCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+body.theme-sunset { background: linear-gradient(135deg, #6366f1 0%, #db2777 50%, #f43f5e 100%); }
+body.theme-sunset .dash-panel, body.theme-sunset .app-header { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); }
 
-.app-wrapper { position: relative; z-index: 2; width: 100%; max-width: 1120px; display: flex; flex-direction: column; gap: 18px; }
+body.theme-evening { background: linear-gradient(135deg, #1e293b 0%, #312e81 50%, #0f172a 100%); }
+body.theme-evening .dash-panel, body.theme-evening .app-header { background: var(--bg-surface); backdrop-filter: blur(20px); }
+
+body.theme-night { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); } /* Xanh xám lợt thay vì đen thui */
+body.theme-night .dash-panel, body.theme-night .app-header { background: var(--bg-surface); backdrop-filter: blur(20px); }
+
+body.theme-rain { background: linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%); } /* Xanh lợt của trời mưa */
+body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(20px); }
+
+/* Mặt trời lơ lửng ban ngày */
+.sun-element {
+    position: fixed; top: 30px; right: 50px; width: 90px; height: 90px;
+    background: radial-gradient(circle, #fef08a 0%, #facc15 60%, rgba(250,204,21,0) 100%);
+    border-radius: 50%; box-shadow: 0 0 60px rgba(250, 204, 21, 0.7);
+    pointer-events: none; z-index: 1; opacity: 0; transition: opacity 1.5s ease;
+}
+body.theme-day .sun-element { opacity: 1; animation: sunFloatingDynamic 4s ease-in-out infinite alternate; }
+@keyframes sunFloatingDynamic {
+    0% { transform: translateY(0px) scale(1); filter: brightness(1); }
+    100% { transform: translateY(-20px) scale(1.05); filter: brightness(1.15); }
+}
+
+/* Ánh sao lấp lánh ban đêm */
+.stars-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 1.5s ease;
+    background-image:
+        radial-gradient(2px 2px at 15% 15%, rgba(255,255,255,0.8) 100%, transparent),
+        radial-gradient(1px 1px at 30% 45%, rgba(255,255,255,0.6) 100%, transparent),
+        radial-gradient(2px 2px at 50% 25%, rgba(255,255,255,0.9) 100%, transparent),
+        radial-gradient(1px 1px at 70% 65%, rgba(255,255,255,0.5) 100%, transparent),
+        radial-gradient(2px 2px at 85% 10%, rgba(255,255,255,0.8) 100%, transparent);
+    background-size: 250px 250px;
+}
+body.theme-night .stars-bg { opacity: 1; animation: twinkle 3s infinite alternate; }
+@keyframes twinkle { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* Hiệu ứng đèn thành phố buổi tối */
+.city-lights-container {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 1.5s ease;
+}
+body.theme-evening .city-lights-container { opacity: 1; }
+
+.road {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 28vh;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    overflow: hidden; perspective: 800px;
+}
+.light-streak {
+    position: absolute; height: 4px; border-radius: 4px; filter: blur(2px); opacity: 0.8;
+}
+.light-streak.red { width: 140px; background: #ef4444; box-shadow: 0 0 20px #ef4444; bottom: 20%; right: -200px; animation: moveLeft 6s linear infinite; }
+.light-streak.white { width: 100px; background: #fef08a; box-shadow: 0 0 20px #fef08a; bottom: 45%; left: -200px; animation: moveRight 5s linear infinite 1s; }
+.light-streak.red-fast { width: 90px; background: #ef4444; box-shadow: 0 0 15px #ef4444; bottom: 30%; right: -200px; animation: moveLeft 4.5s linear infinite 2.5s; }
+.light-streak.white-fast { width: 120px; background: #e0f2fe; box-shadow: 0 0 20px #e0f2fe; bottom: 55%; left: -200px; animation: moveRight 3.5s linear infinite 0.5s; }
+
+@keyframes moveLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-150vw); } }
+@keyframes moveRight { 0% { transform: translateX(0); } 100% { transform: translateX(150vw); } }
+
+.street-lamp {
+    position: absolute; bottom: 22vh; left: 15%; width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(250,204,21,0.12) 0%, transparent 60%);
+    border-radius: 50%; filter: blur(20px);
+}
+.street-lamp.lamp-2 { left: 55%; bottom: 28vh; transform: scale(0.85); }
+.street-lamp.lamp-3 { left: 85%; bottom: 18vh; transform: scale(1.1); background: radial-gradient(circle, rgba(255,150,50,0.1) 0%, transparent 60%); }
+
+
+#weatherCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+
+.app-wrapper { position: relative; z-index: 3; width: 100%; max-width: 1120px; display: flex; flex-direction: column; gap: 18px; }
 
 .app-header {
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
@@ -55,7 +121,7 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .brand-name { font-weight: 800; font-size: 1.15rem; }
 
 .search-container {
-    flex: 1; max-width: 480px; display: flex; align-items: center;
+    flex: 1; max-width: 380px; display: flex; align-items: center;
     background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 999px; padding: 6px 14px;
 }
 .search-container:focus-within { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
@@ -64,6 +130,15 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .search-container button { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px 6px; }
 
 .header-actions { display: flex; align-items: center; gap: 8px; }
+
+.lang-switch-group {
+    display: flex; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 999px; padding: 2px; gap: 2px;
+}
+.lang-btn {
+    background: transparent; border: none; color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 999px; cursor: pointer; transition: var(--transition);
+}
+.lang-btn.active { background: var(--accent-blue); color: #0a1118; }
+
 .action-btn {
     width: 40px; height: 40px; border-radius: 50%; background: var(--bg-surface-elevated);
     border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -121,8 +196,8 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .smart-notice.danger i { color: var(--accent-red); }
 
 .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.metric-card { display: flex; align-items: center; gap: 12px; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; cursor: pointer; }
-.metric-card:hover { border-color: var(--border-hover); background: #1a2a3a; }
+.metric-card { display: flex; align-items: center; gap: 12px; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; cursor: pointer; transition: var(--transition); }
+.metric-card:hover { border-color: var(--accent-blue); background: rgba(51, 65, 85, 0.9); transform: translateY(-2px); }
 .metric-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.04); display: flex; align-items: center; justify-content: center; color: var(--accent-blue); }
 .metric-info { display: flex; flex-direction: column; }
 .m-label { font-size: 0.75rem; color: var(--text-secondary); }
@@ -133,18 +208,17 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .strip-title { font-weight: 700; }
 .rain-summary { color: var(--accent-blue); font-weight: 600; }
 .hourly-track { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
-.hour-node { flex: 0 0 62px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; cursor: pointer; }
-.hour-node:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); }
+.hour-node { flex: 0 0 62px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; cursor: pointer; transition: var(--transition); }
+.hour-node:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); transform: translateY(-2px); }
 .hour-node.rain-risk { border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); }
 .hour-node .h-time { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); }
 .hour-node img { width: 28px; height: 28px; }
 .hour-node .h-temp { font-size: 0.78rem; font-weight: 700; }
 .hour-node .h-pop { font-size: 0.68rem; font-weight: 700; color: var(--accent-blue); }
 
-.widgets-row { display: grid; grid-template-columns: 1fr 1fr 150px; gap: 12px; }
+.widgets-row { display: grid; grid-template-columns: 1fr 1fr 180px; gap: 12px; }
 .sub-widget { background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
-.widget-title { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
-.aqi-widget { cursor: pointer; }
+.widget-title { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
 .aqi-main-status { margin: 8px 0; }
 .aqi-badge-pill { display: inline-block; font-size: 0.85rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
 .aqi-badge-pill.fair { color: var(--accent-yellow); background: rgba(250, 204, 21, 0.15); }
@@ -159,9 +233,16 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .sun-label { font-size: 0.7rem; color: var(--text-secondary); display: block; }
 .sun-item strong { font-family: var(--font-mono); font-size: 0.85rem; }
 
-.map-widget { padding: 6px; overflow: hidden; }
-.map-container { width: 100%; height: 85px; border-radius: var(--radius-sm); overflow: hidden; background: #000; }
-.map-container iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg) contrast(1.1) brightness(0.85); }
+/* CSS MỚI CHO RADAR MAP: Nền tối chuẩn Esri */
+.map-widget { padding: 10px; overflow: hidden; display: flex; flex-direction: column; gap: 6px;}
+.radar-header { display: flex; justify-content: space-between; align-items: center; }
+.radar-controls { display: flex; gap: 4px; }
+.radar-controls button { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; cursor: pointer; transition: all 0.2s; }
+.radar-controls button:hover { background: rgba(255,255,255,0.15); }
+.radar-controls button.active { background: var(--accent-blue); color: #000; font-weight: bold; border-color: var(--accent-blue); }
+.map-container { width: 100%; height: 110px; border-radius: var(--radius-sm); overflow: hidden; background: #222; position: relative; z-index: 10; }
+#radarMap { width: 100%; height: 100%; z-index: 1; }
+.leaflet-container { z-index: 1 !important; }
 .coords-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary); text-align: center; padding-top: 4px; }
 
 .forecast-panel { display: flex; flex-direction: column; gap: 12px; }
@@ -170,9 +251,9 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .forecast-list { display: flex; flex-direction: column; gap: 8px; }
 .forecast-item {
     display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-elevated);
-    border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 16px; cursor: pointer;
+    border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 16px; cursor: pointer; transition: var(--transition);
 }
-.forecast-item:hover { border-color: var(--border-hover); background: #1a2a3a; transform: translateX(3px); }
+.forecast-item:hover { border-color: var(--accent-blue); background: rgba(51, 65, 85, 0.9); transform: translateX(3px); }
 .f-day { width: 120px; display: flex; flex-direction: column; }
 .f-day strong { font-size: 0.88rem; }
 .f-day span { font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); }
@@ -186,11 +267,11 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
     border: 1px solid rgba(255, 255, 255, 0.2); padding: 6px 16px; border-radius: 999px; backdrop-filter: blur(12px);
 }
 
-.app-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+.app-modal { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
 .app-modal.active { opacity: 1; pointer-events: auto; }
 .modal-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
 .modal-card {
-    position: relative; z-index: 51; width: 92%; max-width: 440px; background: #111c26;
+    position: relative; z-index: 501; width: 92%; max-width: 440px; background: #1e293b;
     border: 1px solid var(--border-hover); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 .modal-close { position: absolute; top: 14px; right: 14px; background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; }
@@ -203,15 +284,10 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
 .modal-metric-item { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; }
 .modal-metric-item strong { display: block; font-size: 0.95rem; margin-top: 2px; }
 
-.smart-advice-modal-box {
-    grid-column: span 2; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 6px;
-}
-.smart-advice-modal-box .box-title { color: var(--accent-blue); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-.advice-content { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
 .modal-hourly-box { display: flex; flex-direction: column; gap: 8px; }
 .box-title { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
 .modal-hourly-track { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.modal-hour-node { flex: 0 0 55px; background: rgba(255,255,255,0.04); border-radius: 6px; padding: 6px; text-align: center; font-size: 0.75rem; display: flex; flex-direction: column; gap: 2px; }
 
 .optimal-item {
     background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: flex; align-items: center; gap: 12px;
@@ -220,4 +296,4 @@ body.theme-rain .dash-panel, body.theme-rain .app-header { background: rgba(15, 
     font-size: 1.3rem; color: var(--accent-yellow); background: rgba(250, 204, 21, 0.1); width: 42px; height: 42px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
 }
 .optimal-info h4 { font-size: 0.9rem; font-weight: 700; }
-.optimal-info p { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+.optimal-info p { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
