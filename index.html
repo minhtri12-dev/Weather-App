@@ -5,148 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkyCast — Dự Báo Thời Tiết</title>
     <link rel="icon" type="image/png" href="weather.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body id="appBody">
     <canvas id="weatherCanvas"></canvas>
     <div class="sun-element" id="sunElement"></div>
     <div class="stars-bg" id="starsBg"></div>
 
-    <div class="app-wrapper">
-        <header class="app-header">
+    <div class="app-container">
+        <div class="top-toolbar">
             <div class="brand">
-                <span class="brand-logo"><i class="fa-solid fa-cloud-sun"></i></span>
-                <span class="brand-name">SkyCast</span>
+                <img src="weather.png" alt="Logo">
+                <span>SkyCast</span>
             </div>
+            
+            <div class="quick-cities-bar" id="quickCitiesScroll">
+                <button type="button" class="city-pill current-loc-btn" data-type="current" title="Vị trí hiện tại"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <div id="historyCitiesContainer" class="history-container"></div>
+                <!-- Đã cập nhật 3 vị trí -->
+                <button type="button" class="city-pill" data-lat="10.8231" data-lon="106.6297" data-label="TP. Hồ Chí Minh">TP. Hồ Chí Minh</button>
+                <button type="button" class="city-pill" data-lat="10.9416" data-lon="106.8242" data-label="Đồng Nai">Đồng Nai</button>
+                <button type="button" class="city-pill" data-lat="21.0285" data-lon="105.8542" data-label="Hà Nội">Hà Nội</button>
+            </div>
+
             <div class="search-container">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="cityInput" placeholder="Tìm thành phố..." spellcheck="false" autocomplete="off">
+                <input type="text" id="cityInput" placeholder="Tìm thành phố..." autocomplete="off" spellcheck="false">
                 <ul class="autocomplete-list" id="autocompleteList"></ul>
             </div>
+            
             <div class="header-actions">
                 <div class="lang-switch-group">
                     <button type="button" class="lang-btn active" data-lang="vi">VI</button>
                     <button type="button" class="lang-btn" data-lang="en">EN</button>
-                    <button type="button" class="lang-btn" data-lang="zh">中文</button>
+                    <button type="button" class="lang-btn" data-lang="zh">ZH</button>
                 </div>
-                <button id="optimalTimeBtn" class="action-btn gold-btn" title="Gợi ý khung giờ vàng"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-                <button id="audioToggleBtn" class="action-btn" title="Bật/Tắt âm thanh"><i class="fa-solid fa-volume-xmark" id="audioIcon"></i></button>
+                <button id="optimalTimeBtn" class="action-btn gold-btn"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                <button id="audioToggleBtn" class="action-btn"><i class="fa-solid fa-volume-xmark" id="audioIcon"></i></button>
             </div>
-        </header>
-
-        <div class="quick-cities-bar" id="quickCitiesBar">
-            <button type="button" class="city-pill current-loc-btn" data-type="current"><i class="fa-solid fa-location-crosshairs"></i> <span data-i18n="currentLoc">Vị trí hiện tại</span></button>
-            <div class="divider"></div>
-            <button type="button" class="city-pill" data-lat="10.8231" data-lon="106.6297" data-label="TP. Hồ Chí Minh">TP. Hồ Chí Minh</button>
-            <button type="button" class="city-pill" data-lat="21.0285" data-lon="105.8542" data-label="Hà Nội">Hà Nội</button>
-            <button type="button" class="city-pill" data-lat="16.0544" data-lon="108.2022" data-label="Đà Nẵng">Đà Nẵng</button>
-            <button type="button" class="city-pill" data-lat="51.5074" data-lon="-0.1278" data-label="London">London</button>
         </div>
 
-        <main class="dashboard-grid">
-            <section class="main-column">
-                <div class="dash-panel">
-                    <div class="location-header">
-                        <div class="loc-info">
-                            <h2 id="cityNameDisplay">Đang tải...</h2>
-                            <span class="update-time" id="lastUpdateLabel">Đang đồng bộ</span>
+        <div class="bento-main">
+            <section class="left-col">
+                <div class="hero-header">
+                    <div class="hero-left">
+                        <h2 id="cityNameDisplay" class="city-name">--</h2>
+                        <div class="hero-temp-group">
+                            <div id="mainWeatherIcon" class="hero-icon-container"></div>
+                            <div class="temp-big"><span id="tempValue">--</span><span class="temp-unit">°C</span></div>
                         </div>
-                        <div class="time-badge mobile-hide">
-                            <span class="live-pulse"></span>
-                            <span id="digitalTime">--:--:--</span>
-                        </div>
+                        <!-- Xóa Cảm giác như, thay bằng Mô tả thời tiết -->
+                        <h3 id="weatherDesc" class="condition-text" style="margin-top: 8px;">--</h3>
                     </div>
-
-                    <div class="hero-weather">
-                        <div class="live-status-badge" id="liveStatusBadge"><i class="fa-solid fa-spinner fa-spin"></i> Khởi tạo hệ thống</div>
-                        <div class="hero-content">
-                            <div class="hero-temp-box"><span class="temp-number" id="tempValue">--</span><span class="temp-unit">°</span></div>
-                            <div class="hero-details">
-                                <h3 class="condition-text" id="weatherDesc">...</h3>
-                                <div class="rain-chance highlight-text">
-                                    <i class="fa-solid fa-umbrella"></i> <strong id="rainPopVal">--%</strong> <span data-i18n="rainPopLabel">khả năng mưa</span>
-                                </div>
-                            </div>
-                            <div class="analog-clock">
-                                <div class="clock-face">
-                                    <div class="hand hour-hand" id="hourHand"></div>
-                                    <div class="hand min-hand" id="minuteHand"></div>
-                                    <div class="hand second-hand" id="secondHand"></div>
-                                    <div class="clock-center"></div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="hero-center">
+                        <span id="smartGreetingLabel" class="smart-greeting">--</span>
                     </div>
-
-                    <div class="metrics-grid">
-                        <div class="metric-card" data-metric="humidity"><i class="fa-solid fa-droplet metric-icon"></i><div><span class="m-label" data-i18n="humidity">Độ ẩm</span><strong class="m-val" id="humidityVal">--%</strong></div></div>
-                        <div class="metric-card" data-metric="wind"><i class="fa-solid fa-wind metric-icon"></i><div><span class="m-label" data-i18n="windSpeed">Gió</span><strong class="m-val" id="windVal">-- km/h</strong></div></div>
-                        <div class="metric-card" data-metric="rain_volume"><i class="fa-solid fa-cloud-rain metric-icon"></i><div><span class="m-label" data-i18n="rainVol">Mưa (1h)</span><strong class="m-val" id="rainVolVal">0 mm</strong></div></div>
-                        <div class="metric-card" data-metric="uv"><i class="fa-solid fa-sun metric-icon"></i><div><span class="m-label" data-i18n="uvIndex">Tia UV</span><strong class="m-val" id="uvIndexVal">--</strong></div></div>
+                    <div class="hero-right">
+                        <div class="digital-clock-container">
+                            <div class="time-wrapper">
+                                <span class="live-pulse"></span>
+                                <span id="digitalTime" class="clock-time">--:--:--</span>
+                            </div>
+                            <span id="digitalDate" class="clock-date">--</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="dash-panel chart-panel">
-                    <div class="panel-head"><h3 data-i18n="hourlyChartTitle">Diễn biến nhiệt độ & Khả năng mưa</h3></div>
-                    <div class="chart-wrapper"><canvas id="hourlyChart"></canvas></div>
+                <div class="bento-box hourly-box">
+                    <div class="box-nav">
+                        <button class="nav-btn active" data-i18n="tabHourly">Theo giờ</button>
+                        <span class="live-status-badge" id="liveStatusBadge">--</span>
+                    </div>
+                    <div class="hourly-strip" id="hourlyStrip"></div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="bento-box metric-box" data-metric="wind">
+                        <div class="metric-title" data-i18n="windSpeed">Gió</div>
+                        <div class="metric-content wind-content">
+                            <div class="metric-info">
+                                <div><strong id="windVal">--</strong><span class="m-unit">km/h</span></div>
+                                <span class="m-sub" id="windDesc">--</span>
+                            </div>
+                            <div class="compass-wrapper">
+                                <i class="fa-solid fa-location-arrow compass-arrow" id="windCompassArrow"></i>
+                                <span class="compass-n">N</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bento-box metric-box" data-metric="humidity">
+                        <div class="metric-title" data-i18n="humidity">Độ ẩm</div>
+                        <div class="metric-content bar-content">
+                            <div class="metric-info">
+                                <div><strong id="humidityVal">--</strong><span class="m-unit">%</span></div>
+                                <span class="m-sub" id="dewpointVal">--</span>
+                            </div>
+                            <div class="v-bar-track"><div class="v-bar-fill humidity-fill" id="humidityBar"></div><div class="v-bar-dot" id="humidityDot"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Đã thêm data-metric="aqi" -->
+                    <div class="bento-box metric-box wide-box" data-metric="aqi">
+                        <div class="metric-title" data-i18n="aqiTitle">Không khí (AQI)</div>
+                        <div class="metric-content aqi-content">
+                            <div class="aqi-info">
+                                <strong id="aqiNum">--</strong>
+                                <span id="aqiText" class="aqi-text">--</span>
+                            </div>
+                            <div class="h-bar-track gradient-aqi">
+                                <div class="h-bar-dot" id="aqiDot"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Đã thêm data-metric="pressure" -->
+                    <div class="bento-box metric-box" data-metric="pressure">
+                        <div class="metric-title" data-i18n="pressure">Áp suất</div>
+                        <div class="metric-content bar-content">
+                            <div class="metric-info">
+                                <div><strong id="pressureVal">--</strong><span class="m-unit">hPa</span></div>
+                                <span class="m-sub" id="pressureDesc">--</span>
+                            </div>
+                            <div class="v-bar-track"><div class="v-bar-fill pressure-fill" id="pressureBar"></div><div class="v-bar-dot" id="pressureDot"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="bento-box metric-box" data-metric="uv">
+                        <div class="metric-title" data-i18n="uvIndex">UV ước tính</div>
+                        <div class="metric-content bar-content">
+                            <div class="metric-info">
+                                <strong id="uvVal">--</strong>
+                                <span class="m-sub" id="uvDesc">--</span>
+                            </div>
+                            <div class="v-bar-track"><div class="v-bar-fill uv-fill" id="uvBar"></div><div class="v-bar-dot" id="uvDot"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Đã thêm data-metric="sun" -->
+                    <div class="bento-box metric-box wide-box" data-metric="sun">
+                        <div class="metric-title" data-i18n="sunTitle">Mặt trời mọc & lặn</div>
+                        <div class="metric-content sun-content">
+                            <div class="sun-times">
+                                <div><span style="color:var(--accent-yellow)">Mọc:</span> <strong id="sunriseTime">--:--</strong></div>
+                                <div><span style="color:#a78bfa">Lặn:</span> <strong id="sunsetTime">--:--</strong></div>
+                            </div>
+                            <div class="sun-arc-wrapper">
+                                <div class="sun-arc-path"></div>
+                                <i class="fa-solid fa-sun base-icon left"></i>
+                                <i class="fa-solid fa-moon base-icon right"></i>
+                                <i class="fa-solid fa-sun sun-icon-arc" id="sunArcIcon"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <section class="side-column">
-                <div class="dash-panel radar-panel">
-                    <div class="panel-head radar-header">
-                        <h3><i class="fa-solid fa-satellite-dish" style="color:var(--accent-blue);"></i> <span data-i18n="radarTitle">Live Radar</span></h3>
+            <section class="right-col scrollable">
+                <div class="bento-box forecast-box">
+                    <div class="box-nav" style="justify-content: space-between;">
+                        <span class="nav-btn active" data-i18n="tabWeekly">Dự báo 5 ngày</span>
+                        <span id="weeklyRecordBadge" class="weekly-record-pill">--</span>
                     </div>
+                    <div class="forecast-list" id="forecastList"></div>
+                </div>
+
+                <div class="bento-box highlights-box">
+                    <div class="box-nav"><span class="nav-btn active"><i class="fa-solid fa-bolt" style="color:var(--accent-yellow)"></i> <span data-i18n="highlightsTitle">Khoảnh khắc đáng chú ý</span></span></div>
+                    <div class="highlights-grid" id="highlightsGrid"></div>
+                </div>
+
+                <div class="bento-box radar-box">
+                    <div class="box-nav"><span class="nav-btn active"><i class="fa-solid fa-satellite-dish" style="color:var(--accent-blue)"></i> <span data-i18n="radarTitle">Live Radar</span></span></div>
                     <div class="map-container" id="radarMapContainer">
                         <iframe id="windyRadar" width="100%" height="100%" frameborder="0" src=""></iframe>
                     </div>
                 </div>
-
-                <div class="mini-widgets-row">
-                    <div class="mini-widget aqi-widget">
-                        <span class="w-title" data-i18n="aqiTitle">Không khí (AQI)</span>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 4px;">
-                            <span class="aqi-badge-pill" id="aqiBadge">--</span>
-                            <span id="aqiValDesc" style="font-size: 0.8rem; color: var(--text-secondary); text-shadow: var(--text-shadow-light); line-height: 1.3;"></span>
-                        </div>
-                    </div>
-                    <div class="mini-widget sun-widget">
-                        <span class="w-title" data-i18n="sunTitle">Mặt trời</span>
-                        <div class="sun-grid">
-                            <div class="sun-item"><i class="fa-solid fa-sun" style="color:var(--accent-yellow)"></i> <strong id="sunriseTime">--:--</strong></div>
-                            <div class="sun-item"><i class="fa-solid fa-moon" style="color:#a78bfa"></i> <strong id="sunsetTime">--:--</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dash-panel forecast-panel">
-                    <div class="panel-head"><h3 data-i18n="forecast5Days">Dự báo 5 ngày tới</h3></div>
-                    <div class="forecast-list" id="forecastList"></div>
-                </div>
             </section>
-        </main>
+        </div>
     </div>
 
-    <!-- Modals -->
-    <div id="dayDetailModal" class="app-modal">
+    <div id="detailModal" class="app-modal">
         <div class="modal-scrim"></div>
         <div class="modal-card">
             <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-header">
-                <h3 id="dayModalTitle">--</h3>
+                <h3 id="detailModalTitle">--</h3>
                 <div class="modal-summary">
-                    <img id="dayModalIcon" src="" alt="">
-                    <div class="modal-summary-text"><span class="modal-desc" id="dayModalDesc">--°C &nbsp;•&nbsp; --</span></div>
+                    <div id="detailModalIcon" style="font-size: 2.5rem;"></div>
+                    <div class="modal-summary-text"><span class="modal-desc" id="detailModalDesc">--°C &nbsp;•&nbsp; --</span></div>
                 </div>
             </div>
             <div class="modal-metrics-grid">
-                <div class="modal-metric-item"><span class="m-label" data-i18n="humidity">Độ ẩm</span><strong id="dayModalHumidity">--%</strong></div>
-                <div class="modal-metric-item"><span class="m-label" data-i18n="windSpeed">Gió</span><strong id="dayModalWind">-- km/h</strong></div>
-                <div class="modal-metric-item"><span class="m-label" data-i18n="rainVol">Mưa</span><strong id="dayModalRainVol">0 mm</strong></div>
-                <div class="modal-metric-item"><span class="m-label" data-i18n="rainPop">Xác suất</span><strong id="dayModalPop">--%</strong></div>
+                <div class="modal-metric-item"><span class="m-label" data-i18n="humidity">Độ ẩm</span><strong id="detailModalHumidity">--%</strong></div>
+                <div class="modal-metric-item"><span class="m-label" data-i18n="windSpeed">Gió</span><strong id="detailModalWind">-- km/h</strong></div>
+                <div class="modal-metric-item"><span class="m-label" data-i18n="rainVol">Mưa</span><strong id="detailModalRainVol">0 mm</strong></div>
+                <div class="modal-metric-item"><span class="m-label" data-i18n="rainPop">Xác suất</span><strong id="detailModalPop">--%</strong></div>
             </div>
         </div>
     </div>
@@ -165,16 +222,12 @@
         <div class="modal-card info-card">
             <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
             <div style="display:flex; align-items:center; gap:10px;">
-                <div class="info-icon" id="infoModalIcon"></div>
+                <div class="info-icon" id="infoModalIcon"><i class="fa-solid fa-info"></i></div>
                 <h3 id="infoModalTitle">--</h3>
             </div>
-            <div class="modal-progress-track">
-                <div class="modal-progress-fill" id="infoModalProgress"></div>
-            </div>
+            <div class="modal-progress-track"><div class="modal-progress-fill" id="infoModalProgress"></div></div>
             <p id="infoModalBody" class="modal-advice-text"></p>
-            <div class="mini-chart-container" id="miniChartBox">
-                <canvas id="miniMetricChart"></canvas>
-            </div>
+            <div class="mini-chart-container" id="miniChartBox"><canvas id="miniMetricChart"></canvas></div>
         </div>
     </div>
 
