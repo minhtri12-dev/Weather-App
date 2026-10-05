@@ -24,7 +24,17 @@ const I18N = {
         hourlyChartTitle: "Diễn biến nhiệt độ & Khả năng mưa", aqiTitle: "Không khí (AQI)", sunTitle: "Mặt trời",
         forecast5Days: "Dự báo 5 ngày tới", footerText: "Dữ liệu API từ OpenWeather",
         uvIndex: "Tia UV", goldSlotTitle: "Khung Giờ Vàng", radarTitle: "Live Radar",
-        days: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
+        btnRain: "Mưa", btnClouds: "Mây",
+        days: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'],
+        statusRain: "Đang có mưa", statusSun: "Không mưa", statusLoad: "Khởi tạo hệ thống",
+        chartTempLabel: "Nhiệt độ (°C)", chartRainLabel: "Khả năng mưa (%)",
+        aqiLevel: {
+            1: { t: 'Rất tốt', d: 'Không khí trong lành' },
+            2: { t: 'Khá', d: 'Chất lượng chấp nhận được' },
+            3: { t: 'Trung bình', d: 'Hạn chế ra ngoài lâu' },
+            4: { t: 'Kém', d: 'Không khí ô nhiễm' },
+            5: { t: 'Nguy hại', d: 'Mức độ ô nhiễm cao' }
+        }
     },
     en: {
         searchPlaceholder: "Search city...", currentLoc: "Current Location", humidity: "Humidity",
@@ -32,15 +42,35 @@ const I18N = {
         hourlyChartTitle: "Temperature & Rain 24h", aqiTitle: "Air Quality (AQI)", sunTitle: "Sun Schedule",
         forecast5Days: "5-Day Forecast", footerText: "Data from OpenWeather",
         uvIndex: "UV Index", goldSlotTitle: "Golden Hours", radarTitle: "Live Radar",
-        days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        btnRain: "Rain", btnClouds: "Clouds",
+        days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        statusRain: "Raining", statusSun: "No Rain", statusLoad: "System Init",
+        chartTempLabel: "Temperature (°C)", chartRainLabel: "Chance of rain (%)",
+        aqiLevel: {
+            1: { t: 'Excellent', d: 'Air quality is ideal' },
+            2: { t: 'Fair', d: 'Air quality is acceptable' },
+            3: { t: 'Moderate', d: 'Limit prolonged outdoor exertion' },
+            4: { t: 'Poor', d: 'Air is polluted' },
+            5: { t: 'Hazardous', d: 'High level of pollution' }
+        }
     },
     zh: {
         searchPlaceholder: "搜索城市...", currentLoc: "当前位置", humidity: "湿度",
         windSpeed: "风速", rainVol: "降雨量 (1小时)", rainPopLabel: "降雨概率",
         hourlyChartTitle: "24小时温度与降雨趋势", aqiTitle: "空气质量 (AQI)", sunTitle: "日照时间",
         forecast5Days: "未来5天预报", footerText: "数据来自 OpenWeather",
-        uvIndex: "紫外线指数", goldSlotTitle: "黄金时段", radarTitle: "雷达",
-        days: ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+        uvIndex: "紫外线指数", goldSlotTitle: "黄金时段", radarTitle: "实时雷达",
+        btnRain: "雨", btnClouds: "云",
+        days: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+        statusRain: "下雨中", statusSun: "无雨", statusLoad: "系统初始化",
+        chartTempLabel: "温度 (°C)", chartRainLabel: "降雨概率 (%)",
+        aqiLevel: {
+            1: { t: '优', d: '空气清新' },
+            2: { t: '良', d: '空气质量可接受' },
+            3: { t: '轻污染', d: '减少长时间户外活动' },
+            4: { t: '中污染', d: '空气被污染' },
+            5: { t: '重污染', d: '污染程度高' }
+        }
     }
 };
 
@@ -117,6 +147,8 @@ const AudioController = {
 const UI = {
     renderAll: (data, displayName) => {
         const { weather, forecast, aqi } = data;
+        const langData = I18N[STATE.currentLang];
+        
         STATE.timezoneOffset = weather.timezone || 0;
         STATE.currentCondition = weather.weather[0].main.toLowerCase();
         STATE.trueCondition = WeatherLogic.getTrueCondition(weather);
@@ -147,7 +179,7 @@ const UI = {
         if(liveBadge) {
             const isRain = STATE.trueCondition.includes("rain") || STATE.trueCondition.includes("drizzle");
             liveBadge.className = `live-status-badge ${isRain ? 'rain' : 'sun'}`;
-            liveBadge.innerHTML = isRain ? `<i class="fa-solid fa-cloud-showers-heavy"></i> Đang có mưa` : `<i class="fa-solid fa-sun"></i> Không mưa`;
+            liveBadge.innerHTML = isRain ? `<i class="fa-solid fa-cloud-showers-heavy"></i> ${langData.statusRain}` : `<i class="fa-solid fa-sun"></i> ${langData.statusSun}`;
         }
 
         const humidityVal = document.getElementById("humidityVal");
@@ -185,11 +217,9 @@ const UI = {
         const seconds = cityDate.getSeconds();
         STATE.currentHour = hours;
 
-        // Cập nhật đồng hồ số (có giây)
         const digitalTime = document.getElementById("digitalTime");
         if(digitalTime) digitalTime.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-        // Cập nhật đồng hồ kim
         const hourHand = document.getElementById('hourHand');
         const minuteHand = document.getElementById('minuteHand');
         const secondHand = document.getElementById('secondHand');
@@ -244,16 +274,11 @@ const UI = {
             badge.textContent = "--"; return;
         }
         const val = aqiData.list[0].main.aqi;
-        const configs = {
-            1: { t: 'Rất tốt', c: '', d: 'Không khí trong lành' },
-            2: { t: 'Khá', c: 'fair', d: 'Chất lượng chấp nhận được' },
-            3: { t: 'Trung bình', c: 'moderate', d: 'Hạn chế ra ngoài lâu' },
-            4: { t: 'Kém', c: 'poor', d: 'Không khí ô nhiễm' },
-            5: { t: 'Nguy hại', c: 'poor', d: 'Mức độ ô nhiễm cao' }
-        };
-        badge.textContent = configs[val].t;
-        badge.className = `aqi-badge-pill ${configs[val].c}`;
-        desc.textContent = configs[val].d;
+        const config = I18N[STATE.currentLang].aqiLevel[val];
+        
+        badge.textContent = config.t;
+        badge.className = `aqi-badge-pill aqi-${val}`;
+        desc.textContent = config.d;
     },
 
     renderChart: (forecastList) => {
@@ -263,21 +288,44 @@ const UI = {
         const labels = next24h.map(s => UI.formatHour(s.dt));
         const temps = next24h.map(s => Math.round(s.main.temp));
         const pops = next24h.map(s => Math.round((s.pop || 0) * 100));
+        const langData = I18N[STATE.currentLang];
 
         if (STATE.hourlyChartInstance) STATE.hourlyChartInstance.destroy();
+        
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.8)';
+        
         STATE.hourlyChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Nhiệt độ (°C)', data: temps, borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.1)', borderWidth: 3, tension: 0.4, fill: true, yAxisID: 'y' },
-                    { label: 'Khả năng mưa (%)', data: pops, type: 'bar', backgroundColor: 'rgba(56, 189, 248, 0.4)', borderRadius: 4, yAxisID: 'y1' }
+                    { label: langData.chartTempLabel, data: temps, borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.1)', borderWidth: 3, tension: 0.4, fill: true, yAxisID: 'y' },
+                    { label: langData.chartRainLabel, data: pops, type: 'bar', backgroundColor: 'rgba(56, 189, 248, 0.4)', borderRadius: 4, yAxisID: 'y1' }
                 ]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                    if (context.datasetIndex === 1) label += '%';
+                                    else label += '°C';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace" } } },
+                    x: { grid: { display: false, color: 'rgba(255,255,255,0.1)' }, ticks: { font: { family: "'JetBrains Mono', monospace" } } },
                     y: { display: false, min: Math.min(...temps) - 5, max: Math.max(...temps) + 5 },
                     y1: { display: false, min: 0, max: 100 }
                 }
@@ -343,8 +391,6 @@ const UI = {
             div.dataset.date = k;
             
             const popHtml = maxPop > 0 ? `<span class="f-pop">${maxPop}%</span>` : `<span class="f-pop" style="opacity:0">0%</span>`;
-            
-            // DÙNG LẠI ICON CHUẨN CỦA OPENWEATHER ĐỂ KHÔNG BAO GIỜ LỖI
             const safeIconUrl = `https://openweathermap.org/img/wn/${mid.weather[0].icon}@2x.png`;
 
             div.innerHTML = `
@@ -374,42 +420,63 @@ const UI = {
         let title = "", advice = "", percent = 0, chartData = [], color = "";
         const next24h = forecast.list.slice(0, 8);
         const labels = next24h.map(s => UI.formatHour(s.dt));
+        const lang = STATE.currentLang;
 
         if (metricType === 'humidity') {
             const hum = weather.main.humidity;
-            title = "Độ ẩm"; percent = hum; color = "#38bdf8";
+            title = lang === 'en' ? 'Humidity' : (lang === 'zh' ? '湿度' : 'Độ ẩm');
+            percent = hum; color = "#38bdf8";
             iconEl.innerHTML = '<i class="fa-solid fa-droplet"></i>';
             chartData = next24h.map(s => s.main.humidity);
             
-            if (hum < 40) advice = `Mức ${hum}%. Hơi khô hanh. Bạn nên bôi chút dưỡng ẩm và uống đủ nước nhé.`;
-            else if (hum <= 70) advice = `Mức ${hum}%. Cực kỳ lý tưởng, mát mẻ và dễ chịu cho da.`;
-            else advice = `Mức ${hum}%. Hơi oi bức và rít da. Ưu tiên đồ cotton cho thoáng mát.`;
+            if (lang === 'en') {
+                advice = hum < 40 ? `Humidity is ${hum}%. A bit dry. Keep yourself hydrated.` : hum <= 70 ? `Humidity is ${hum}%. Ideal and comfortable.` : `Humidity is ${hum}%. Muggy conditions, wear breathable fabrics.`;
+            } else if (lang === 'zh') {
+                advice = hum < 40 ? `湿度为 ${hum}%。稍微干燥，请多补充水分。` : hum <= 70 ? `湿度为 ${hum}%。体感非常舒适。` : `湿度为 ${hum}%。天气闷热，建议穿着透气衣物。`;
+            } else {
+                advice = hum < 40 ? `Mức ${hum}%. Hơi khô hanh. Bạn nên bôi chút dưỡng ẩm và uống đủ nước nhé.` : hum <= 70 ? `Mức ${hum}%. Cực kỳ lý tưởng, mát mẻ và dễ chịu cho da.` : `Mức ${hum}%. Hơi oi bức và rít da. Ưu tiên đồ cotton cho thoáng mát.`;
+            }
         } else if (metricType === 'wind') {
             const wind = Math.round(weather.wind.speed * 3.6);
-            title = "Tốc độ Gió"; percent = Math.min((wind / 50) * 100, 100); color = "#34d399";
+            title = lang === 'en' ? 'Wind Speed' : (lang === 'zh' ? '风速' : 'Tốc độ Gió');
+            percent = Math.min((wind / 50) * 100, 100); color = "#34d399";
             iconEl.innerHTML = '<i class="fa-solid fa-wind"></i>';
             chartData = next24h.map(s => Math.round(s.wind.speed * 3.6));
 
-            if (wind < 10) advice = `${wind} km/h. Gió rất nhẹ, không gian có vẻ tĩnh lặng.`;
-            else if (wind <= 25) advice = `${wind} km/h. Hiu hiu mát mẻ, mở cửa sổ đón gió thì tuyệt vời.`;
-            else advice = `${wind} km/h. Gió khá mạnh, chú ý tay lái nếu đang đi trên đường.`;
+            if (lang === 'en') {
+                advice = wind < 10 ? `Wind is light at ${wind} km/h.` : wind <= 25 ? `Wind is ${wind} km/h. Pleasant breeze outdoors.` : `Wind is strong at ${wind} km/h. Drive carefully.`;
+            } else if (lang === 'zh') {
+                advice = wind < 10 ? `风速较轻，约 ${wind} 公里/小时。` : wind <= 25 ? `风速 ${wind} 公里/小时。微风习习，体感舒适。` : `风速较大，达 ${wind} 公里/小时。出行请注意安全。`;
+            } else {
+                advice = wind < 10 ? `${wind} km/h. Gió rất nhẹ, không gian có vẻ tĩnh lặng.` : wind <= 25 ? `${wind} km/h. Hiu hiu mát mẻ, mở cửa sổ đón gió thì tuyệt vời.` : `${wind} km/h. Gió khá mạnh, chú ý tay lái nếu đang đi trên đường.`;
+            }
         } else if (metricType === 'rain_volume') {
             const pop = forecast.list.length > 0 ? Math.round((forecast.list[0].pop || 0) * 100) : 0;
-            title = "Khả năng mưa"; percent = pop; color = "#a78bfa";
+            title = lang === 'en' ? 'Chance of Rain' : (lang === 'zh' ? '降雨概率' : 'Khả năng mưa');
+            percent = pop; color = "#a78bfa";
             iconEl.innerHTML = '<i class="fa-solid fa-cloud-rain"></i>';
             chartData = next24h.map(s => Math.round((s.pop || 0) * 100));
 
-            if (pop === 0) advice = `Xác suất 0%. Tạm thời an toàn, bạn cứ thoải mái ra ngoài.`;
-            else if (pop < 50) advice = `Xác suất ${pop}%. Có thể mưa nhỏ, cẩn thận vẫn hơn.`;
-            else advice = `Xác suất ${pop}%. Chắc chắn mưa, nhớ mang ô hoặc áo mưa nhé!`;
+            if (lang === 'en') {
+                advice = pop === 0 ? `0% chance of rain. Safe to head out.` : pop < 50 ? `${pop}% chance of rain. Might get a few drops.` : `${pop}% chance of rain. Better bring an umbrella!`;
+            } else if (lang === 'zh') {
+                advice = pop === 0 ? `降雨概率为 0%。天气晴好，适合出行。` : pop < 50 ? `降雨概率 ${pop}%。可能会有零星小雨。` : `降雨概率高达 ${pop}%。出门记得带伞！`;
+            } else {
+                advice = pop === 0 ? `Xác suất 0%. Tạm thời an toàn, bạn cứ thoải mái ra ngoài.` : pop < 50 ? `Xác suất ${pop}%. Có thể mưa nhỏ, cẩn thận vẫn hơn.` : `Xác suất ${pop}%. Chắc chắn mưa, nhớ mang ô hoặc áo mưa nhé!`;
+            }
         } else if (metricType === 'uv') {
             const uv = WeatherLogic.calculateUV(STATE.currentHour, STATE.trueCondition, weather.clouds ? weather.clouds.all : 0);
-            title = "Chỉ số UV"; percent = Math.min((uv.index / 11) * 100, 100); color = "#facc15";
+            title = lang === 'en' ? 'UV Index' : (lang === 'zh' ? '紫外线指数' : 'Chỉ số UV');
+            percent = Math.min((uv.index / 11) * 100, 100); color = "#facc15";
             iconEl.innerHTML = '<i class="fa-solid fa-sun"></i>';
             
-            if (uv.index < 3) advice = `UV mức ${uv.index}. Rất an toàn, không lo tổn hại da.`;
-            else if (uv.index <= 7) advice = `UV mức ${uv.index} (Trung bình). Nên bôi kem chống nắng nếu ra ngoài lâu.`;
-            else advice = `UV mức ${uv.index}! Cảnh báo cực gắt. Hạn chế ra đường lúc này.`;
+            if (lang === 'en') {
+                advice = uv.index < 3 ? `UV Index is ${uv.index}. Safe to be outside.` : uv.index <= 7 ? `UV Index is ${uv.index} (Moderate). Wear sunscreen if outside.` : `UV Index is ${uv.index}! Very high, avoid direct sun.`;
+            } else if (lang === 'zh') {
+                advice = uv.index < 3 ? `紫外线指数 ${uv.index}。非常安全，无需特别防护。` : uv.index <= 7 ? `紫外线指数 ${uv.index}（中等）。建议涂抹防晒霜。` : `紫外线指数高达 ${uv.index}！请尽量避免暴晒。`;
+            } else {
+                advice = uv.index < 3 ? `UV mức ${uv.index}. Rất an toàn, không lo tổn hại da.` : uv.index <= 7 ? `UV mức ${uv.index} (Trung bình). Nên bôi kem chống nắng nếu ra ngoài lâu.` : `UV mức ${uv.index}! Cảnh báo cực gắt. Hạn chế ra đường lúc này.`;
+            }
         }
 
         if(tEl) tEl.textContent = title;
@@ -439,7 +506,10 @@ const UI = {
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                        scales: { x: { display: true, grid: { display: false }, ticks: { font: { size: 10 } } }, y: { display: false, min: 0 } }
+                        scales: { 
+                            x: { display: true, grid: { display: false, color: 'rgba(255,255,255,0.1)' }, ticks: { font: { size: 10 } } }, 
+                            y: { display: false, min: 0 } 
+                        }
                     }
                 });
             }
@@ -450,7 +520,6 @@ const UI = {
     openDetailModal: (data) => {
         document.getElementById("dayModalTitle").textContent = data.title;
         document.getElementById("dayModalDesc").innerHTML = `${data.temp}°C &nbsp;•&nbsp; ${data.desc}`;
-        // Load lại ảnh OpenWeather chuẩn cho Modal
         document.getElementById("dayModalIcon").src = `https://openweathermap.org/img/wn/${data.icon}@2x.png`;
         document.getElementById("dayModalHumidity").textContent = `${data.humidity}%`;
         document.getElementById("dayModalWind").textContent = `${data.wind} km/h`;
@@ -464,6 +533,7 @@ const UI = {
         const wrap = document.getElementById("optimalResultsList");
         if(!wrap) return;
         wrap.innerHTML = "";
+        const lang = STATE.currentLang;
         
         const runTarget = [5,6,7,8, 17,18,19,20];
         const fbTarget = [16,17,18,19,20,21];
@@ -485,10 +555,11 @@ const UI = {
 
         const formatResult = (res, title, icon) => {
             if (res.score < 50) {
+                const emptyMsg = lang === 'en' ? 'Weather is unfavorable. Better stay indoors.' : lang === 'zh' ? '天气不佳，建议在室内活动。' : 'Thời tiết hiện không thuận lợi. Nên hoãn lại nhé.';
                 return `
                 <div class="optimal-item" style="display:block;">
                     <h4><i class="${icon}"></i> ${title}</h4>
-                    <div class="gh-empty">Thời tiết hiện không thuận lợi. Nên hoãn lại nhé.</div>
+                    <div class="gh-empty">${emptyMsg}</div>
                 </div>`;
             }
             const time = UI.formatHour(res.slot.dt);
@@ -496,29 +567,34 @@ const UI = {
             const pop = Math.round((res.slot.pop||0)*100);
             const hum = res.slot.main.humidity;
             const wind = Math.round(res.slot.wind.speed * 3.6);
+            const badgeText = lang === 'en' ? 'Ideal' : (lang === 'zh' ? '理想' : 'Lý tưởng');
             
             return `
             <div class="optimal-item" style="display:block;">
                 <h4><i class="${icon}"></i> ${title}</h4>
                 <div class="gh-card">
                     <div class="gh-header">
-                        <strong>Lúc ${time}</strong>
-                        <span class="score-badge ${res.score >= 85 ? 'excellent' : 'good'}">Lý tưởng</span>
+                        <strong>${lang === 'en' ? 'At ' + time : (lang === 'zh' ? time + ' 左右' : 'Lúc ' + time)}</strong>
+                        <span class="score-badge ${res.score >= 85 ? 'excellent' : 'good'}">${badgeText}</span>
                     </div>
                     <div class="gh-metrics">
                         <span><i class="fa-solid fa-temperature-half"></i> ${temp}°C</span>
                         <span><i class="fa-solid fa-droplet"></i> ${hum}%</span>
                         <span><i class="fa-solid fa-wind"></i> ${wind} km/h</span>
-                        <span><i class="fa-solid fa-umbrella"></i> ${pop}% mưa</span>
+                        <span><i class="fa-solid fa-umbrella"></i> ${pop}% ${lang === 'en' ? 'rain' : (lang === 'zh' ? '雨' : 'mưa')}</span>
                     </div>
                 </div>
             </div>`;
         };
 
+        const tRun = lang === 'en' ? 'Running' : (lang === 'zh' ? '跑步' : 'Chạy bộ');
+        const tFb = lang === 'en' ? 'Football' : (lang === 'zh' ? '足球' : 'Đá banh');
+        const tDine = lang === 'en' ? 'Outdoor Activities' : (lang === 'zh' ? '户外活动' : 'Hoạt động ngoài trời');
+
         wrap.innerHTML = `
-            ${formatResult(bestRun, "Chạy bộ", "fa-solid fa-person-running")}
-            ${formatResult(bestFb, "Đá banh", "fa-solid fa-futbol")}
-            ${formatResult(bestDine, "Hoạt động ngoài trời", "fa-solid fa-utensils")}
+            ${formatResult(bestRun, tRun, "fa-solid fa-person-running")}
+            ${formatResult(bestFb, tFb, "fa-solid fa-futbol")}
+            ${formatResult(bestDine, tDine, "fa-solid fa-utensils")}
         `;
         const modal = document.getElementById("optimalModal");
         if(modal) modal.classList.add("active");
@@ -557,7 +633,7 @@ const UI = {
                 canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
                 lightningAlpha -= 0.1;
             }
-            canvasCtx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+            canvasCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             canvasCtx.lineWidth = 1;
             canvasCtx.lineCap = "round";
             rainParticles.forEach(p => {
@@ -588,11 +664,16 @@ const API = {
             ];
 
             const [wRes, fRes, aRes] = await Promise.all(endpoints);
-            if (!wRes.ok || !fRes.ok) throw new Error("API Fetch Error");
+            if (!wRes.ok || !fRes.ok) throw new Error("API Error");
 
             const weather = await wRes.json();
             const forecast = await fRes.json();
             const aqi = aRes.ok ? await aRes.json() : null;
+
+            const locVariants = [I18N.vi.currentLoc, I18N.en.currentLoc, I18N.zh.currentLoc];
+            if (locVariants.includes(name) || locVariants.includes(STATE.name)) {
+                name = I18N[STATE.currentLang].currentLoc;
+            }
 
             STATE.lat = lat; STATE.lon = lon;
             STATE.name = name || weather.name;
@@ -604,7 +685,7 @@ const API = {
         } catch (err) { 
             console.error(err);
             const cityNameDisplay = document.getElementById("cityNameDisplay");
-            if(cityNameDisplay) cityNameDisplay.textContent = "Lỗi kết nối mạng";
+            if(cityNameDisplay) cityNameDisplay.textContent = STATE.currentLang === 'en' ? 'Connection Error' : (STATE.currentLang === 'zh' ? '连接错误' : 'Lỗi kết nối');
         }
     },
     searchSuggestions: async (query) => {

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyCast — Advanced Weather Dashboard</title>
-    
+    <title>SkyCast — Dự Báo Thời Tiết</title>
+    <link rel="icon" type="image/png" href="weather.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -32,8 +32,8 @@
                     <button type="button" class="lang-btn" data-lang="en">EN</button>
                     <button type="button" class="lang-btn" data-lang="zh">中文</button>
                 </div>
-                <button id="optimalTimeBtn" class="action-btn gold-btn"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-                <button id="audioToggleBtn" class="action-btn"><i class="fa-solid fa-volume-xmark" id="audioIcon"></i></button>
+                <button id="optimalTimeBtn" class="action-btn gold-btn" title="Gợi ý khung giờ vàng"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                <button id="audioToggleBtn" class="action-btn" title="Bật/Tắt âm thanh"><i class="fa-solid fa-volume-xmark" id="audioIcon"></i></button>
             </div>
         </header>
 
@@ -70,7 +70,6 @@
                                     <i class="fa-solid fa-umbrella"></i> <strong id="rainPopVal">--%</strong> <span data-i18n="rainPopLabel">khả năng mưa</span>
                                 </div>
                             </div>
-                            <!-- THAY ICON LỖI BẰNG ĐỒNG HỒ KIM CAO CẤP -->
                             <div class="analog-clock">
                                 <div class="clock-face">
                                     <div class="hand hour-hand" id="hourHand"></div>
@@ -109,9 +108,9 @@
                 <div class="mini-widgets-row">
                     <div class="mini-widget aqi-widget">
                         <span class="w-title" data-i18n="aqiTitle">Không khí (AQI)</span>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 4px;">
                             <span class="aqi-badge-pill" id="aqiBadge">--</span>
-                            <span id="aqiValDesc" style="font-size: 0.75rem; color: var(--text-secondary);"></span>
+                            <span id="aqiValDesc" style="font-size: 0.8rem; color: var(--text-secondary); text-shadow: var(--text-shadow-light); line-height: 1.3;"></span>
                         </div>
                     </div>
                     <div class="mini-widget sun-widget">
