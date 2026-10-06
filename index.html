@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyCast — Dự Báo Thời Tiết</title>
+    <title>SkyCast — Premium Weather Center</title>
     <link rel="icon" type="image/png" href="weather.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -18,14 +18,14 @@
     <div class="app-container">
         <div class="top-toolbar">
             <div class="brand">
-                <img src="weather.png" alt="Logo">
+                <img src="weather.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1163/1163624.png'">
                 <span>SkyCast</span>
             </div>
             
             <div class="quick-cities-bar" id="quickCitiesScroll">
                 <button type="button" class="city-pill current-loc-btn" data-type="current" title="Vị trí hiện tại"><i class="fa-solid fa-location-crosshairs"></i></button>
                 <div id="historyCitiesContainer" class="history-container"></div>
-                <!-- Đã cập nhật 3 vị trí -->
+                <!-- Đúng 3 vị trí theo yêu cầu -->
                 <button type="button" class="city-pill" data-lat="10.8231" data-lon="106.6297" data-label="TP. Hồ Chí Minh">TP. Hồ Chí Minh</button>
                 <button type="button" class="city-pill" data-lat="10.9416" data-lon="106.8242" data-label="Đồng Nai">Đồng Nai</button>
                 <button type="button" class="city-pill" data-lat="21.0285" data-lon="105.8542" data-label="Hà Nội">Hà Nội</button>
@@ -57,8 +57,7 @@
                             <div id="mainWeatherIcon" class="hero-icon-container"></div>
                             <div class="temp-big"><span id="tempValue">--</span><span class="temp-unit">°C</span></div>
                         </div>
-                        <!-- Xóa Cảm giác như, thay bằng Mô tả thời tiết -->
-                        <h3 id="weatherDesc" class="condition-text" style="margin-top: 8px;">--</h3>
+                        <h3 id="weatherDesc" class="condition-text" style="margin-top: 6px;">--</h3>
                     </div>
                     <div class="hero-center">
                         <span id="smartGreetingLabel" class="smart-greeting">--</span>
@@ -108,7 +107,6 @@
                         </div>
                     </div>
 
-                    <!-- Đã thêm data-metric="aqi" -->
                     <div class="bento-box metric-box wide-box" data-metric="aqi">
                         <div class="metric-title" data-i18n="aqiTitle">Không khí (AQI)</div>
                         <div class="metric-content aqi-content">
@@ -122,7 +120,6 @@
                         </div>
                     </div>
 
-                    <!-- Đã thêm data-metric="pressure" -->
                     <div class="bento-box metric-box" data-metric="pressure">
                         <div class="metric-title" data-i18n="pressure">Áp suất</div>
                         <div class="metric-content bar-content">
@@ -145,7 +142,6 @@
                         </div>
                     </div>
 
-                    <!-- Đã thêm data-metric="sun" -->
                     <div class="bento-box metric-box wide-box" data-metric="sun">
                         <div class="metric-title" data-i18n="sunTitle">Mặt trời mọc & lặn</div>
                         <div class="metric-content sun-content">

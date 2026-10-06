@@ -43,9 +43,8 @@ const I18N = {
         humidity: "Độ ẩm", windSpeed: "Gió", pressure: "Áp suất", uvIndex: "UV ước tính", aqiTitle: "Không khí (AQI)", sunTitle: "Mặt trời mọc & lặn",
         days: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'],
         statusSun: "Quang đãng", statusCloudy: "Nhiều mây", statusRain: "Có khả năng mưa", statusHeavyRain: "Mưa rải rác",
-        greetings: { morning: "Chào buổi sáng! Khởi đầu ngày mới mát mẻ.", afternoon: "Chào buổi trưa! Cẩn thận trời khá oi bức.", evening: "Chào buổi tối! Không gian lý tưởng để dạo phố.", night: "Đêm muộn rồi! Chúc bạn ngủ ngon." },
         aqiLevel: { 1: {t:'Rất tốt'}, 2: {t:'Khá'}, 3: {t:'Trung bình'}, 4: {t:'Kém'}, 5: {t:'Nguy hại'} },
-        now: "Bây giờ", feelsLike: "Cảm giác như", dewpoint: "Sương", pressureNormal: "Bình thường", uvLow: "Thấp", uvHigh: "Cao",
+        now: "Bây giờ", dewpoint: "Sương", pressureNormal: "Bình thường", uvLow: "Thấp", uvHigh: "Cao",
         hlSunset: "Hoàng hôn đẹp", hlTemp: "Đỉnh nhiệt", hlRain: "Mưa cao nhất",
         highlightsDesc: { sunset: "Ánh sáng đẹp vào lúc hoàng hôn. Khoảnh khắc thư giãn trong ngày.", peakTemp: "Trời khá nóng và oi bức. Nhớ bổ sung nước và hạn chế ra ngoài.", peakRain: "Khả năng cao có mưa rào. Đừng quên mang theo ô khi di chuyển." }
     },
@@ -55,9 +54,8 @@ const I18N = {
         humidity: "Humidity", windSpeed: "Wind", pressure: "Pressure", uvIndex: "Estimated UV", aqiTitle: "Air Pollution", sunTitle: "Sunrise & Sunset",
         days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         statusSun: "Clear Sky", statusCloudy: "Cloudy", statusRain: "Chance of Rain", statusHeavyRain: "Showers",
-        greetings: { morning: "Good morning! A fresh start.", afternoon: "Good afternoon! Stay hydrated.", evening: "Good evening! Perfect for a walk.", night: "Late night. Have a good rest." },
         aqiLevel: { 1: {t:'Excellent'}, 2: {t:'Fair'}, 3: {t:'Moderate'}, 4: {t:'Poor'}, 5: {t:'Hazardous'} },
-        now: "Now", feelsLike: "Feels like", dewpoint: "Dewpoint", pressureNormal: "Normal", uvLow: "Low", uvHigh: "High",
+        now: "Now", dewpoint: "Dewpoint", pressureNormal: "Normal", uvLow: "Low", uvHigh: "High",
         hlSunset: "Sunset View", hlTemp: "Peak Temp", hlRain: "Rain Peak",
         highlightsDesc: { sunset: "Beautiful sunset view. A great time to relax.", peakTemp: "Temperatures are peaking. Stay indoors and hydrate.", peakRain: "High chance of precipitation. Don't forget your umbrella." }
     },
@@ -67,9 +65,8 @@ const I18N = {
         humidity: "湿度", windSpeed: "风速", pressure: "气压", uvIndex: "紫外线", aqiTitle: "空气质量", sunTitle: "日出与日落",
         days: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
         statusSun: "晴朗", statusCloudy: "多云", statusRain: "可能有雨", statusHeavyRain: "局部有雨",
-        greetings: { morning: "早上好！开启新的一天。", afternoon: "下午好！注意防晒。", evening: "晚上好！适合散步。", night: "夜深了，晚安。" },
         aqiLevel: { 1: {t:'优'}, 2: {t:'良'}, 3: {t:'轻污染'}, 4: {t:'中污染'}, 5: {t:'重污染'} },
-        now: "现在", feelsLike: "体感温度", dewpoint: "露点", pressureNormal: "正常", uvLow: "低", uvHigh: "高",
+        now: "现在", dewpoint: "露点", pressureNormal: "正常", uvLow: "低", uvHigh: "高",
         hlSunset: "最佳日落", hlTemp: "最高温", hlRain: "降雨高峰",
         highlightsDesc: { sunset: "傍晚的日落时光，适合放松心情。", peakTemp: "气温达到顶峰，天气炎热，请多补充水分。", peakRain: "降雨概率较高，出行请记得携带雨具。" }
     }
@@ -85,6 +82,29 @@ const WeatherLogic = {
         if (isApiRaining && rain1h === 0 && clouds < 40) return "clouds"; 
         return main;
     },
+    getSmartGreeting: (weather, condition, hour) => {
+        const isRaining = condition.includes("rain") || condition.includes("drizzle") || condition.includes("thunderstorm");
+        const temp = weather.main.temp;
+
+        if (isRaining) {
+            return "Trời đang có mưa rào, bạn nhớ mang theo ô khi ra ngoài nhé!";
+        }
+        if (temp >= 32) {
+            return "Chào buổi trưa! Trời khá nắng nóng, hãy bổ sung nước đầy đủ.";
+        }
+        if (temp <= 20) {
+            return "Trời đang se lạnh, nhớ mặc áo khoác ấm khi ra phố.";
+        }
+        if (hour >= 5 && hour < 12) {
+            return "Chào buổi sáng! Khởi đầu ngày mới thật tuyệt vời.";
+        } else if (hour >= 12 && hour < 17) {
+            return "Chào buổi chiều! Chúc bạn làm việc hiệu quả.";
+        } else if (hour >= 17 && hour < 22) {
+            return "Chào buổi tối! Không gian lý tưởng để dạo phố.";
+        } else {
+            return "Đêm muộn rồi! Chúc bạn ngủ ngon.";
+        }
+    },
     scoreSlot: (slot, targetHoursArray) => {
         const h = new Date((slot.dt + STATE.timezoneOffset) * 1000).getUTCHours();
         if (!targetHoursArray.includes(h)) return { score: -1, slot: null };
@@ -97,13 +117,6 @@ const WeatherLogic = {
         score -= pop; 
         if (rain > 0.5) score -= 60;
         return { score: Math.max(0, score), slot: slot, hour: h };
-    },
-    calculateUV: (hour, condition, clouds) => {
-        // Mock function based on time
-        if (hour < 7 || hour > 17) return { index: 0 };
-        let base = hour > 10 && hour < 14 ? 9 : 5;
-        if (clouds > 50) base -= 2;
-        return { index: Math.max(0, base) };
     }
 };
 
@@ -155,8 +168,6 @@ const UI = {
 
         document.getElementById("cityNameDisplay").textContent = displayName || weather.name;
         document.getElementById("tempValue").textContent = Math.round(weather.main.temp);
-        
-        // Mới: Gán trực tiếp mô tả thời tiết (Mây đen u ám) vào thẻ
         document.getElementById("weatherDesc").textContent = weather.weather[0].description;
         
         const iconCode = weather.weather[0].icon;
@@ -175,9 +186,9 @@ const UI = {
             }
         }
 
-        UI.updateThemeAndGreeting();
+        UI.updateThemeAndGreeting(weather);
         UI.renderMetrics(weather, aqi);
-        UI.renderHourlyStrip(forecast.list);
+        UI.renderHourlyStrip(forecast.list, weather);
         UI.render5Days(forecast.list);
         UI.renderHighlights(forecast.list, weather.sys.sunset);
         
@@ -261,32 +272,75 @@ const UI = {
         arcIcon.style.transform = `rotate(${arcDeg}deg)`;
     },
 
-    renderHourlyStrip: (list) => {
+    renderHourlyStrip: (list, currentWeather) => {
         const strip = document.getElementById("hourlyStrip");
         strip.innerHTML = "";
         STATE.hourlyCache = {}; 
-        const next24 = list.slice(0, 10);
         const langData = I18N[STATE.currentLang];
 
-        next24.forEach((s, index) => {
-            const timeStr = index === 0 ? langData.now : UI.formatHour(s.dt);
-            const iconCode = s.weather[0].icon;
-            const temp = Math.round(s.main.temp);
+        let hourlyItems = [];
+        
+        const nowDt = currentWeather.dt;
+        const nowTemp = Math.round(currentWeather.main.temp);
+        const nowIcon = currentWeather.weather[0].icon;
+        
+        hourlyItems.push({
+            dt: nowDt,
+            title: langData.now,
+            temp: nowTemp,
+            desc: currentWeather.weather[0].description,
+            icon: nowIcon,
+            humidity: currentWeather.main.humidity,
+            wind: Math.round(currentWeather.wind.speed * 3.6),
+            rainVol: currentWeather.rain && currentWeather.rain["1h"] ? currentWeather.rain["1h"].toFixed(1) : 0,
+            pop: list.length > 0 ? Math.round((list[0].pop || 0) * 100) : 0
+        });
+
+        let nextHourTimestamp = Math.ceil(((nowDt + STATE.timezoneOffset) * 1000) / 3600000) * 3600000;
+        if (nextHourTimestamp <= (nowDt + STATE.timezoneOffset) * 1000) {
+            nextHourTimestamp += 3600000;
+        }
+
+        for (let i = 0; i < 9; i++) {
+            const slotUnix = Math.floor((nextHourTimestamp + (i * 3600000)) / 1000) - STATE.timezoneOffset;
             
-            STATE.hourlyCache[s.dt] = {
+            let refSlot = list[0];
+            for (let slot of list) {
+                if (slot.dt >= slotUnix) {
+                    refSlot = slot;
+                    break;
+                }
+            }
+
+            const temp = Math.round(refSlot.main.temp);
+            const iconCode = refSlot.weather[0].icon;
+            
+            const dTarget = new Date((slotUnix + STATE.timezoneOffset) * 1000);
+            const timeStr = `${String(dTarget.getUTCHours()).padStart(2, "0")}:00`;
+
+            hourlyItems.push({
+                dt: slotUnix,
                 title: timeStr,
-                temp: temp, desc: s.weather[0].description, icon: iconCode,
-                humidity: s.main.humidity, wind: Math.round(s.wind.speed * 3.6),
-                rainVol: s.rain && s.rain["3h"] ? s.rain["3h"].toFixed(1) : 0, pop: Math.round((s.pop||0)*100)
-            };
+                temp: temp,
+                desc: refSlot.weather[0].description,
+                icon: iconCode,
+                humidity: refSlot.main.humidity,
+                wind: Math.round(refSlot.wind.speed * 3.6),
+                rainVol: refSlot.rain && refSlot.rain["3h"] ? (refSlot.rain["3h"] / 3).toFixed(1) : 0,
+                pop: Math.round((refSlot.pop || 0) * 100)
+            });
+        }
+
+        hourlyItems.forEach((item, index) => {
+            STATE.hourlyCache[item.dt] = item;
 
             const div = document.createElement("div");
             div.className = `hourly-item ${index === 0 ? 'now' : ''}`;
-            div.dataset.time = s.dt; 
+            div.dataset.time = item.dt; 
             div.innerHTML = `
-                <span class="h-time">${timeStr}</span>
-                <div class="h-icon-fa">${IconMap[iconCode] || '<i class="fa-solid fa-cloud"></i>'}</div>
-                <span class="h-temp">${temp}°</span>
+                <span class="h-time">${item.title}</span>
+                <div class="h-icon-fa">${IconMap[item.icon] || '<i class="fa-solid fa-cloud"></i>'}</div>
+                <span class="h-temp">${item.temp}°</span>
             `;
             strip.appendChild(div);
         });
@@ -417,6 +471,7 @@ const UI = {
         });
     },
 
+    // BỔ SUNG NĂM VÀO ĐỊNH DẠNG NGÀY THÁNG
     updateClockTick: () => {
         const now = new Date();
         const cityDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (STATE.timezoneOffset * 1000));
@@ -427,25 +482,21 @@ const UI = {
         
         const lang = STATE.currentLang;
         let dStr = "";
-        if (lang === 'vi') dStr = cityDate.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
-        else if (lang === 'en') dStr = cityDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        else dStr = cityDate.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' });
+        if (lang === 'vi') dStr = cityDate.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        else if (lang === 'en') dStr = cityDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        else dStr = cityDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
 
         document.getElementById("digitalTime").textContent = `${h}:${m}:${s}`;
         document.getElementById("digitalDate").textContent = dStr;
     },
 
-    updateThemeAndGreeting: () => {
+    updateThemeAndGreeting: (weatherObj) => {
         const now = new Date();
         const cityDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (STATE.timezoneOffset * 1000));
         const hours = cityDate.getHours();
         
-        const g = I18N[STATE.currentLang].greetings;
-        let txt = g.morning;
-        if (hours >= 12 && hours < 17) txt = g.afternoon;
-        else if (hours >= 17 && hours < 22) txt = g.evening;
-        else if (hours >= 22 || hours < 5) txt = g.night;
-        document.getElementById("smartGreetingLabel").textContent = txt;
+        const greetingText = WeatherLogic.getSmartGreeting(weatherObj, STATE.trueCondition, hours);
+        document.getElementById("smartGreetingLabel").textContent = greetingText;
 
         const body = document.getElementById("appBody");
         body.className = "";
@@ -493,7 +544,6 @@ const UI = {
         });
     },
 
-    // Bổ sung các thẻ được nhấp (AQI, Áp Suất, Mặt Trời)
     handleMetricCardClick: (metricType) => {
         if (!STATE.weatherDataStore) return;
         const { weather, forecast, aqi } = STATE.weatherDataStore;
@@ -524,10 +574,10 @@ const UI = {
             advice = `${wind} km/h. Đã có la bàn chỉ hướng ngoài màn hình chính.`;
             chartBox.style.display = "block";
         } else if (metricType === 'uv') {
-            const uv = WeatherLogic.calculateUV(new Date().getHours(), STATE.trueCondition, weather.clouds ? weather.clouds.all : 0);
+            const uv = weather.clouds ? (weather.clouds.all < 50 ? 6 : 2) : 3;
             title = lang === 'en' ? 'Estimated UV Index' : (lang === 'zh' ? '估算紫外线指数' : 'Chỉ số UV ước tính');
-            percent = Math.min((uv.index / 11) * 100, 100); color = "#facc15";
-            advice = `UV ước tính mức ${uv.index}. Dựa trên góc mặt trời và tầng mây thực tế.`;
+            percent = Math.min((uv / 11) * 100, 100); color = "#facc15";
+            advice = `UV ước tính mức ${uv}. Bảo vệ da khi ra ngoài trời nắng.`;
             chartBox.style.display = "none";
         } else if (metricType === 'aqi') {
             const aqiNum = aqi && aqi.list ? aqi.list[0].main.aqi : 1;
@@ -539,7 +589,7 @@ const UI = {
             const pres = weather.main.pressure;
             title = lang === 'en' ? 'Pressure' : (lang === 'zh' ? '气压' : 'Áp suất');
             percent = Math.min(((pres - 950) / 100) * 100, 100); color = "#34d399";
-            advice = `Áp suất hiện tại là ${pres} hPa. ${pres > 1020 ? 'Áp suất cao.' : pres < 1000 ? 'Áp suất thấp.' : 'Mức bình thường.'}`;
+            advice = `Áp suất hiện tại là ${pres} hPa. Trạng thái không khí bình thường ổn định.`;
             chartBox.style.display = "none";
         } else if (metricType === 'sun') {
             title = lang === 'en' ? 'Sunrise & Sunset' : (lang === 'zh' ? '日出与日落' : 'Mặt trời mọc & lặn');
@@ -681,7 +731,6 @@ const UI = {
 const API = {
     fetchData: async (lat, lon, name = null) => {
         try {
-            // Sửa logic hiển thị sai tên "Vị trí hiện tại"
             const locVariants = [I18N.vi.currentLoc, I18N.en.currentLoc, I18N.zh.currentLoc];
             if (name && locVariants.includes(name)) {
                 name = I18N[STATE.currentLang].currentLoc;
@@ -745,7 +794,9 @@ const App = {
         AudioController.init();
         App.bindEvents();
         setInterval(UI.updateClockTick, 1000);
-        setInterval(UI.updateThemeAndGreeting, 60000); 
+        setInterval(() => {
+            if(STATE.weatherDataStore) UI.updateThemeAndGreeting(STATE.weatherDataStore.weather);
+        }, 60000); 
 
         const saved = localStorage.getItem(CONFIG.storageKey);
         if (saved) {
